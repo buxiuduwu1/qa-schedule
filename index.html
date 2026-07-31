@@ -124,7 +124,7 @@ a:hover { text-decoration: underline; }
 <tr><td><strong>夏绍昌</strong></td><td style="text-align:center"><strong>2</strong></td><td style="text-align:center">1</td><td style="text-align:center">0</td><td style="text-align:center">1</td><td style="text-align:center">0</td><td style="text-align:center">0</td></tr>
 <tr><td><strong>卢谦</strong></td><td style="text-align:center"><strong>1</strong></td><td style="text-align:center">1</td><td style="text-align:center">0</td><td style="text-align:center">0</td><td style="text-align:center">0</td><td style="text-align:center">0</td></tr>
 </tbody></table></div>
-<div class="section-title">需求明细 <span class="badge" id="filtered-count"></span></div>
+<div class="section-title">需求明细 <span class="badge" id="filtered-count">110 条</span></div>
 <div class="toolbar">
   <input type="text" class="search-input" id="search" placeholder="搜索需求标题..." oninput="filterAll()">
   <button class="filter-btn active" data-status="新" onclick="toggleFilter(this)">新</button>
@@ -137,8 +137,8 @@ a:hover { text-decoration: underline; }
 </div>
 <div class="accordion" id="accordion">
   <div class="accordion-group" data-person="张秋涵"><div class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span><span class="person-name">张秋涵</span><span style="color:#8b949e;font-size:12px">22条</span><span class="stats"><span class="stat-item highlight">新17</span><span class="stat-item">设计取消2</span><span class="stat-item">已提测1</span><span class="stat-item">挂起2</span></span></div><div class="accordion-body"><table><thead><tr><th style="width:50px;text-align:center">序号</th><th style="width:80px;text-align:center">状态</th><th>需求标题</th><th style="width:130px">处理人</th><th style="width:95px;text-align:center">创建时间</th></tr></thead><tbody>
-<tr data-status="新"><td style="text-align:center;color:#484f56">1</td><td style="text-align:center"><span class="tag tag-new">新</span></td><td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196534" target="_blank">【测试】【Bug转需求】【时装】白泽裙子上特效乱闪</a></td><td style="color:#8b949e;font-size:11px">张秋涵、王佳慧、田素垒、穆保锦、管乐怡</td><td style="text-align:center;color:#484f56;font-size:11px">2026-07-07</td></tr>
-</tbody></table></div></div>
+  <tr data-status="新"><td style="text-align:center;color:#484f56">1</td><td style="text-align:center"><span class="tag tag-new">新</span></td><td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196534" target="_blank">【测试】【Bug转需求】【时装】白泽裙子上特效乱闪</a></td><td style="color:#8b949e;font-size:11px">张秋涵、王佳慧、田素垒、穆保锦、管乐怡</td><td style="text-align:center;color:#484f56;font-size:11px">2026-07-07</td></tr>
+  </tbody></table></div></div>
 </div>
 <div class="footer">数据来源：TAPD · 诛仙世界 · 项目测试</div>
 </div>
@@ -184,7 +184,7 @@ function collapseAll() {
   document.querySelectorAll('.accordion-header').forEach(h => { h.classList.remove('open'); });
   document.querySelectorAll('.accordion-body').forEach(b => { b.classList.remove('open'); });
 }
-document.getElementById('filtered-count').textContent = document.querySelectorAll('.accordion-body tbody tr').length + ' 条';
+document.getElementById('filtered-count').textContent = '110 条';
 </script>
 </body>
 </html>
