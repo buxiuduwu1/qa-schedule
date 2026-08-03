@@ -404,6 +404,18 @@ def push_to_github(html, pat):
     return resp.json()['commit']['sha']
 
 
+def purge_jsdelivr():
+    """推送后清除 jsDelivr CDN 缓存，让国内镜像立即生效"""
+    try:
+        url = f"https://purge.jsdelivr.net/gh/{GH_OWNER}/{GH_REPO}@main/{GH_PATH}"
+        resp = requests.get(url, timeout=30)
+        print(f"jsDelivr purge: {resp.status_code}")
+        return resp.status_code == 200
+    except Exception as e:
+        print(f"jsDelivr purge failed: {e}")
+        return False
+
+
 def main():
     pat = get_pat()
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
@@ -415,9 +427,11 @@ def main():
 
     html = generate_html(data_json, dev_rows, summary, inactive, leaked_cats, leaked_total, now_str)
     commit_sha = push_to_github(html, pat)
+    purge_jsdelivr()
 
     print(f"✅ 看板已刷新 · 收录{summary['total']}条 · 分类外{leaked_total}条 · commit {commit_sha[:7]}")
-    print(f"   URL: https://{GH_OWNER}.github.io/{GH_REPO}/")
+    print(f"   GitHub Pages: https://{GH_OWNER}.github.io/{GH_REPO}/")
+    print(f"   国内镜像: https://cdn.jsdelivr.net/gh/{GH_OWNER}/{GH_REPO}@main/{GH_PATH}")
 
 
 if __name__ == '__main__':
