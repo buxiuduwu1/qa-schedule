@@ -1,254 +1,51 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QA 排期看板 · 诛仙世界</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:#111827; color:#e5e7eb; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; padding:20px; max-width:1200px; margin:0 auto; }
-.header { text-align:center; padding:20px 0 10px; }
-.header h1 { font-size:24px; color:#f9fafb; }
-.header .sub { font-size:13px; color:#9ca3af; margin-top:4px; }
-.header .refresh { font-size:12px; color:#6b7280; margin-top:2px; }
-
-/* Summary cards */
-.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin:16px 0; }
-.card { background:#1f2937; border-radius:10px; padding:16px; text-align:center; border-left:4px solid #374151; }
-.card .num { font-size:28px; font-weight:700; }
-.card .label { font-size:13px; color:#9ca3af; margin-top:4px; }
-.card-new { border-left-color:#FF6770; } .card-new .num { color:#FF6770; }
-.card-cancelled { border-left-color:#FAA23B; } .card-cancelled .num { color:#FAA23B; }
-.card-submitted { border-left-color:#70B400; } .card-submitted .num { color:#70B400; }
-.card-testing { border-left-color:#0D68FF; } .card-testing .num { color:#0D68FF; }
-.card-suspended { border-left-color:#9CA3AF; } .card-suspended .num { color:#9CA3AF; }
-.card-total { border-left-color:#8b5cf6; } .card-total .num { color:#8b5cf6; }
-
-/* Dev overview table */
-.table-wrap { overflow-x:auto; margin:20px 0; background:#1f2937; border-radius:10px; padding:4px; }
-table { width:100%; border-collapse:collapse; font-size:14px; }
-th { background:#374151; color:#d1d5db; font-weight:600; padding:10px 12px; text-align:left; white-space:nowrap; }
-td { padding:8px 12px; border-bottom:1px solid #374151; }
-tr:hover td { background:#283548; }
-.badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:700; color:#fff; min-width:28px; text-align:center; }
-.badge-new { background:#FF6770; }
-.badge-cancelled { background:#FAA23B; }
-.badge-submitted { background:#70B400; }
-.badge-testing { background:#0D68FF; }
-.badge-suspended { background:#9CA3AF; }
-.row-hot { background:#7f1d1d22; }
-.row-warm { background:#78350f22; }
-
-/* Search & filter toolbar */
-.toolbar { display:flex; flex-wrap:wrap; gap:10px; margin:16px 0; align-items:center; }
-.toolbar input { flex:1; min-width:200px; padding:8px 14px; background:#1f2937; border:1px solid #374151; border-radius:8px; color:#e5e7eb; font-size:14px; outline:none; }
-.toolbar input:focus { border-color:#8b5cf6; }
-.filter-btns { display:flex; gap:6px; flex-wrap:wrap; }
-.fbtn { padding:6px 14px; border-radius:8px; border:1px solid #374151; background:#1f2937; color:#9ca3af; cursor:pointer; font-size:13px; transition:all .2s; }
-.fbtn:hover { background:#374151; }
-.fbtn.active { background:#8b5cf6; border-color:#8b5cf6; color:#fff; }
-.toggle-all { padding:6px 14px; border-radius:8px; border:1px solid #374151; background:#1f2937; color:#9ca3af; cursor:pointer; font-size:13px; }
-.toggle-all:hover { background:#374151; }
-
-/* Accordion */
-.accordion { margin:16px 0; }
-.acc-group { margin-bottom:12px; background:#1f2937; border-radius:10px; overflow:hidden; }
-.acc-header { padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; border-left:4px solid #374151; transition:background .2s; }
-.acc-header:hover { background:#283548; }
-.acc-header h3 { font-size:15px; color:#f3f4f6; }
-.acc-header .acc-total { font-size:13px; color:#9ca3af; }
-.acc-header .acc-badges { display:flex; gap:4px; margin-left:auto; margin-right:12px; }
-.acc-arrow { transition:transform .3s; font-size:12px; color:#6b7280; }
-.acc-group.open .acc-arrow { transform:rotate(90deg); }
-.acc-body { display:none; padding:0 16px 12px; }
-.acc-group.open .acc-body { display:block; }
-.acc-item { display:flex; align-items:center; padding:6px 0; border-bottom:1px solid #1f2937; font-size:13px; gap:8px; }
-.acc-item:last-child { border-bottom:none; }
-.acc-item .st-tag { flex-shrink:0; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:700; color:#fff; }
-.acc-item .st-link { flex:1; color:#93c5fd; text-decoration:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.acc-item .st-link:hover { text-decoration:underline; }
-.acc-item .st-meta { flex-shrink:0; color:#6b7280; font-size:11px; }
-
-.tag-new { background:#FF6770; }
-.tag-cancelled { background:#FAA23B; }
-.tag-submitted { background:#70B400; }
-.tag-testing { background:#0D68FF; }
-.tag-suspended { background:#9CA3AF; }
-
-/* Footer */
-.footer { text-align:center; padding:20px 0; color:#4b5563; font-size:12px; }
-
-/* Mobile */
-@media (max-width:640px) {
-  body { padding:10px; }
-  .header h1 { font-size:18px; }
-  .cards { grid-template-columns:repeat(3,1fr); gap:8px; }
-  .card { padding:10px; }
-  .card .num { font-size:22px; }
-  .acc-item { flex-wrap:wrap; }
-}
-
-.hidden { display:none !important; }
-.no-results { text-align:center; padding:40px; color:#6b7280; }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <h1>🔧 QA 测试需求排期看板</h1>
-  <div class="sub">诛仙世界 · 项目测试 / 任务玩法 / 数值系统 / 小型团本07-幽姬</div>
-  <div class="refresh">📅 数据更新于 2026-08-03 11:55 CST · 共 27 条需求</div>
-</div>
-
-<div class="cards" id="cards">
-  <div class="card card-total"><div class="num">27</div><div class="label">📋 合计</div></div>
-  <div class="card card-new"><div class="num">0</div><div class="label">🆕 新</div></div>
-  <div class="card card-cancelled"><div class="num">0</div><div class="label">🚫 设计取消</div></div>
-  <div class="card card-submitted"><div class="num">27</div><div class="label">✅ 已提测</div></div>
-  <div class="card card-testing"><div class="num">0</div><div class="label">🔬 测试中</div></div>
-  <div class="card card-suspended"><div class="num">0</div><div class="label">⏸ 挂起</div></div>
-</div>
-
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>开发人员</th>
-        <th>合计</th>
-        <th>新</th>
-        <th>设计取消</th>
-        <th>已提测</th>
-        <th>测试中</th>
-        <th>挂起</th>
-      </tr>
-    </thead>
-    <tbody id="summaryBody">
-    </tbody>
-  </table>
-</div>
-<div style="font-size:12px;color:#6b7280;margin-top:-12px;margin-bottom:8px;padding-left:4px;">
-  无活跃需求：（无）
-</div>
-
-<div class="toolbar">
-  <input type="text" id="search" placeholder="🔍 搜索需求标题..." oninput="filterAll()"/>
-  <div class="filter-btns" id="filterBtns">
-    <button class="fbtn active" onclick="toggleFilter(this,'all')">全部</button>
-    <button class="fbtn" onclick="toggleFilter(this,'新')" style="border-color:#FF6770;color:#FF6770;">新</button>
-    <button class="fbtn" onclick="toggleFilter(this,'设计取消')" style="border-color:#FAA23B;color:#FAA23B;">设计取消</button>
-    <button class="fbtn" onclick="toggleFilter(this,'已提测')" style="border-color:#70B400;color:#70B400;">已提测</button>
-    <button class="fbtn" onclick="toggleFilter(this,'测试中')" style="border-color:#0D68FF;color:#0D68FF;">测试中</button>
-    <button class="fbtn" onclick="toggleFilter(this,'挂起')" style="border-color:#9CA3AF;color:#9CA3AF;">挂起</button>
-  </div>
-  <button class="toggle-all" onclick="toggleAll()">📂 展开全部</button>
-</div>
-
-<div class="accordion" id="accordion"></div>
-<div class="no-results hidden" id="noResults">😕 无匹配结果</div>
-
-<div class="footer">
-  数据来源：TAPD API · 诛仙世界 workspace 21711231 · 自动更新于每周一 12:00
-</div>
-
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>QA排期看板 · 诛仙世界</title><style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#0f1117;color:#e1e4e8;line-height:1.5;min-height:100vh}a{color:#58a6ff;text-decoration:none}a:hover{text-decoration:underline}
+.header{background:linear-gradient(135deg,#1a1d27 0%,#161b22 100%);border-bottom:1px solid #30363d;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.header h1{font-size:22px;font-weight:600;color:#f0f6fc}.header .subtitle{font-size:13px;color:#8b949e}.header .update-time{font-size:12px;color:#6e7681;background:#161b22;padding:6px 12px;border-radius:6px;border:1px solid #30363d}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:20px 24px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:16px 20px;text-align:center}.card .number{font-size:32px;font-weight:700}.card .label{font-size:12px;color:#8b949e;margin-top:4px}
+.card.total .number{color:#e1e4e8}.card.new .number{color:#FF6770}.card.cancelled .number{color:#FAA23B}.card.submitted .number{color:#70B400}.card.testing .number{color:#0D68FF}.card.suspended .number{color:#9CA3AF}
+.main{padding:0 24px 30px;max-width:1400px;margin:0 auto}.section-title{font-size:16px;font-weight:600;color:#f0f6fc;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid #21262d}
+.summary-table{width:100%;border-collapse:collapse;background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden}
+.summary-table th,.summary-table td{padding:10px 14px;text-align:center;font-size:13px;border-bottom:1px solid #21262d}.summary-table th{background:#1a1d27;color:#8b949e;font-weight:500}
+.summary-table th:first-child,.summary-table td:first-child{text-align:left;font-weight:500}
+.summary-table tr.danger td{background:#3d1214}.summary-table tr.warning td{background:#2d2410}.summary-table tr:hover td{background:#1c2128}.summary-table tr.danger:hover td{background:#4d181a}.summary-table tr.warning:hover td{background:#3d2c14}
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid #30363d}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:16px 0}.toolbar input{flex:1;min-width:200px;padding:8px 14px;background:#161b22;border:1px solid #30363d;border-radius:8px;color:#e1e4e8;font-size:13px;outline:none}.toolbar input:focus{border-color:#58a6ff}
+.filter-btn{padding:6px 14px;border:1px solid #30363d;border-radius:20px;background:#161b22;color:#8b949e;font-size:12px;cursor:pointer;transition:all .15s}.filter-btn:hover{border-color:#58a6ff;color:#c9d1d9}.filter-btn.active{background:#1f6feb33;border-color:#1f6feb;color:#58a6ff}.filter-btn.off{opacity:0.4;text-decoration:line-through}
+.accordion{display:flex;flex-direction:column;gap:6px}.accordion-group{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden}.accordion-group.hidden{display:none}
+.accordion-header{padding:12px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;transition:background .15s}.accordion-header:hover{background:#1c2128}
+.accordion-header .dev-name{font-weight:600;font-size:14px;color:#f0f6fc}.accordion-header .dev-summary{font-size:12px;color:#8b949e;margin-left:12px}
+.accordion-header .toggle{font-size:12px;color:#6e7681;transition:transform .2s}.accordion-group.open .accordion-header .toggle{transform:rotate(180deg)}
+.accordion-body{display:none;overflow-x:auto}.accordion-group.open .accordion-body{display:block}
+.detail-table{width:100%;border-collapse:collapse;font-size:13px}.detail-table th,.detail-table td{padding:8px 12px;border-bottom:1px solid #21262d}.detail-table th{background:#1a1d27;color:#8b949e;font-weight:500;text-align:left;white-space:nowrap}.detail-table td{white-space:nowrap}.detail-table td:nth-child(3){white-space:normal;min-width:300px}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;color:#fff}.tag-new{background:#FF6770}.tag-cancelled{background:#FAA23B}.tag-submitted{background:#70B400}.tag-testing{background:#0D68FF}.tag-suspended{background:#9CA3AF}
+.footer{text-align:center;padding:20px 24px 30px;font-size:12px;color:#484f58;border-top:1px solid #21262d;margin-top:10px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;color:#8b949e}.legend span{display:flex;align-items:center;gap:4px}.legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+@media(max-width:768px){.cards{grid-template-columns:repeat(3,1fr);gap:8px}.card{padding:12px 10px}.card .number{font-size:24px}}
+</style></head><body>
+<div class="header"><div><h1>🔧 QA排期看板</h1><div class="subtitle">诛仙世界 · 项目测试 / 任务玩法 / 数值系统 / 小型团本07-幽姬</div></div><div class="update-time">🕐 更新于 2026-08-03 12:19</div></div>
+<div class="cards" id="cards"></div><div class="main">
+<div class="section-title">📊 人员排期总览</div>
+<div class="legend"><span><span class="dot" style="background:#FF6770"></span> 新</span><span><span class="dot" style="background:#FAA23B"></span> 设计取消</span><span><span class="dot" style="background:#70B400"></span> 已提测</span><span><span class="dot" style="background:#0D68FF"></span> 测试中</span><span><span class="dot" style="background:#9CA3AF"></span> 挂起</span><span style="margin-left:16px">🔴 ≥10</span><span>🟡 ≥7</span></div>
+<div class="table-wrap"><table class="summary-table" id="summary-table"></table></div>
+<div class="section-title">📋 需求明细</div>
+<div class="toolbar"><input type="text" id="search" placeholder="🔍 搜索需求标题..." oninput="filterAll()">
+<button class="filter-btn active" data-status="新" onclick="toggleFilter(this,'新')">新</button><button class="filter-btn active" data-status="设计取消" onclick="toggleFilter(this,'设计取消')">设计取消</button><button class="filter-btn active" data-status="已提测" onclick="toggleFilter(this,'已提测')">已提测</button><button class="filter-btn active" data-status="测试中" onclick="toggleFilter(this,'测试中')">测试中</button><button class="filter-btn active" data-status="挂起" onclick="toggleFilter(this,'挂起')">挂起</button>
+<button style="margin-left:auto;padding:6px 14px;border:1px solid #30363d;border-radius:8px;background:#161b22;color:#8b949e;font-size:12px;cursor:pointer" onclick="toggleAll()">展开/折叠全部</button></div>
+<div class="accordion" id="accordion"></div></div>
+<div class="footer"><span>数据来源：TAPD API</span><span>·</span><span>诛仙世界 workspace 21711231</span><span>·</span><span>每周一 12:00 自动刷新</span></div>
 <script>
-const DATA = [{"name": "张海志", "total": 4, "stats": {"新": 0, "设计取消": 0, "已提测": 4, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "张海志;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198882"}, {"title": "【测试】发布时间[2026-08-05]-鬼王技改", "status": "已提测", "status_raw": "status_11", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198572"}, {"title": "【测试】发布时间[2026-08-05]-焚香技改", "status": "已提测", "status_raw": "status_11", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198569"}, {"title": "【测试】发布时间[2026-08-05]-击杀特效、UI外观（头像、头像框、名片皮肤、个人主页贴纸）", "status": "已提测", "status_raw": "status_11", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198565"}]}, {"name": "李研锋", "total": 3, "stats": {"新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "李研锋;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198885"}, {"title": "【测试】发布时间[2026-08-05]-青云技改", "status": "已提测", "status_raw": "status_11", "owner": "李研锋;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198571"}, {"title": "【测试】发布时间[2026-08-05]-天音技改", "status": "已提测", "status_raw": "status_11", "owner": "李研锋;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198570"}]}, {"name": "杨钦", "total": 3, "stats": {"新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "杨钦;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198886"}, {"title": "【测试】发布时间[2026-08-05]-华裳之轮（盲盒抽奖）功能、女娲石商店、盲盒活动板", "status": "已提测", "status_raw": "status_11", "owner": "杨钦;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198568"}, {"title": "【测试】发布时间[2026-08-05]-武器皮肤、技能皮肤", "status": "已提测", "status_raw": "status_11", "owner": "杨钦;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198562"}]}, {"name": "欧阳福辉", "total": 3, "stats": {"新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "欧阳福辉;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198887"}, {"title": "【测试】发布时间[2026-08-05]-UI外观（图形称号）", "status": "已提测", "status_raw": "status_11", "owner": "欧阳福辉;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198567"}, {"title": "【测试】发布时间[2026-08-05]-休闲（休闲动作、置景动作）", "status": "已提测", "status_raw": "status_11", "owner": "欧阳福辉;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198564"}]}, {"name": "周旋之", "total": 2, "stats": {"新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "周旋之;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198879"}, {"title": "【测试】发布时间[2026-08-05]-载具（飞剑、坐骑）", "status": "已提测", "status_raw": "status_11", "owner": "周旋之;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198563"}]}, {"name": "夏绍昌", "total": 2, "stats": {"新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "夏绍昌;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198880"}, {"title": "【测试】发布时间[2026-08-05]-合欢、灵汐技改，战斗法宝修改", "status": "已提测", "status_raw": "status_11", "owner": "夏绍昌;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198573"}]}, {"name": "张家像", "total": 2, "stats": {"新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "张家像;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198881"}, {"title": "【测试】发布时间[2026-08-05]-找徐少青确认是否有新的副本线路可提测", "status": "已提测", "status_raw": "status_11", "owner": "张家像;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198566"}]}, {"name": "张秋涵", "total": 2, "stats": {"新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "张秋涵;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198883"}, {"title": "【测试】发布时间[2026-08-05]-时装（衣服、头发、披风、挂件、特效、成就、时装单品或套装赠品、时装活动板、商城宣传图）", "status": "已提测", "status_raw": "status_11", "owner": "张秋涵;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198561"}]}, {"name": "刘政豪", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "刘政豪;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198874"}]}, {"name": "刘鹏鸣", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "刘鹏鸣;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198875"}]}, {"name": "卢谦", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "卢谦;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198876"}]}, {"name": "吕昕远", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "吕昕远;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198877"}]}, {"name": "吴淦淦", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "吴淦淦;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198878"}]}, {"name": "李子涵", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "李子涵;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198884"}]}];
-const SUMMARY = {"total": 27, "新": 0, "设计取消": 0, "已提测": 27, "测试中": 0, "挂起": 0};
-const DEVROWS = [{"name": "张海志", "total": 4, "新": 0, "设计取消": 0, "已提测": 4, "测试中": 0, "挂起": 0}, {"name": "李研锋", "total": 3, "新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, {"name": "杨钦", "total": 3, "新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, {"name": "欧阳福辉", "total": 3, "新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, {"name": "周旋之", "total": 2, "新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, {"name": "夏绍昌", "total": 2, "新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, {"name": "张家像", "total": 2, "新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, {"name": "张秋涵", "total": 2, "新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, {"name": "刘政豪", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "刘鹏鸣", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "卢谦", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "吕昕远", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "吴淦淦", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "李子涵", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}];
-const INACTIVE = [];
-
-const STATUS_ORDER = ['新','设计取消','已提测','测试中','挂起'];
-const TAG_CLASS = {'新':'tag-new','设计取消':'tag-cancelled','已提测':'tag-submitted','测试中':'tag-testing','挂起':'tag-suspended'};
-const BADGE_CLASS = {'新':'badge-new','设计取消':'badge-cancelled','已提测':'badge-submitted','测试中':'badge-testing','挂起':'badge-suspended'};
-
-let activeFilter = 'all';
-
-function renderSummary() {
-  const tbody = document.getElementById('summaryBody');
-  tbody.innerHTML = DEVROWS.map(d => {
-    let rowClass = '';
-    if (d.total >= 10) rowClass = 'row-hot';
-    else if (d.total >= 7) rowClass = 'row-warm';
-    const badges = STATUS_ORDER.map(st => {
-      const n = d[st] || 0;
-      if (n === 0) return '<td></td>';
-      return `<td><span class="badge ${BADGE_CLASS[st]}">${n}</span></td>`;
-    }).join('');
-    return `<tr class="${rowClass}">
-      <td><strong>${d.name}</strong></td>
-      <td><strong>${d.total}</strong></td>
-      ${badges}
-    </tr>`;
-  }).join('');
-}
-
-function renderAccordion() {
-  const container = document.getElementById('accordion');
-  const searchTerm = document.getElementById('search').value.toLowerCase();
-
-  let html = '';
-  DATA.forEach(group => {
-    const filtered = group.items.filter(item => {
-      const matchSearch = !searchTerm || item.title.toLowerCase().includes(searchTerm);
-      const matchStatus = activeFilter === 'all' || item.status === activeFilter;
-      return matchSearch && matchStatus;
-    });
-    if (filtered.length === 0 && activeFilter !== 'all') return;
-
-    const statBadges = STATUS_ORDER.map(st => {
-      const n = group.stats[st] || 0;
-      if (n === 0) return '';
-      return `<span class="badge ${BADGE_CLASS[st]}" style="font-size:11px;">${n}</span>`;
-    }).filter(Boolean).join('');
-
-    html += `<div class="acc-group" data-dev="${group.name}">
-      <div class="acc-header" onclick="toggleAccordion(this)">
-        <h3>${group.name}</h3>
-        <div class="acc-badges">${statBadges}</div>
-        <span class="acc-total">${group.total}条</span>
-        <span class="acc-arrow">▶</span>
-      </div>
-      <div class="acc-body">
-        ${filtered.map(item => `
-          <div class="acc-item">
-            <span class="st-tag ${TAG_CLASS[item.status]}">${item.status}</span>
-            <a class="st-link" href="${item.url}" target="_blank" title="${item.title.replace(/"/g,'&quot;')}">${item.title}</a>
-            <span class="st-meta">${item.created}</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>`;
-  });
-
-  container.innerHTML = html;
-  document.getElementById('noResults').classList.toggle('hidden', !!container.innerHTML.trim());
-}
-
-function toggleAccordion(header) {
-  header.parentElement.classList.toggle('open');
-}
-
-function toggleFilter(btn, status) {
-  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeFilter = status;
-  filterAll();
-}
-
-function filterAll() {
-  renderAccordion();
-}
-
-function toggleAll() {
-  const groups = document.querySelectorAll('.acc-group');
-  const allOpen = Array.from(groups).every(g => g.classList.contains('open'));
-  groups.forEach(g => g.classList.toggle('open', !allOpen));
-  document.querySelector('.toggle-all').textContent = allOpen ? '📂 展开全部' : '📁 折叠全部';
-}
-
-// Initial render
-renderSummary();
-renderAccordion();
-</script>
-
-</body>
-</html>
+var DATA={"update_time": "2026-08-03 12:19", "total": 129, "active_devs": 14, "global_stats": {"新": 75, "设计取消": 13, "已提测": 31, "测试中": 5, "挂起": 4}, "summary_rows": [{"name": "张秋涵", "total": 21, "class": "danger", "stats": {"新": 15, "设计取消": 2, "已提测": 2, "测试中": 0, "挂起": 2}}, {"name": "张海志", "total": 18, "class": "danger", "stats": {"新": 9, "设计取消": 4, "已提测": 5, "测试中": 0, "挂起": 0}}, {"name": "张家像", "total": 17, "class": "danger", "stats": {"新": 12, "设计取消": 2, "已提测": 2, "测试中": 0, "挂起": 1}}, {"name": "周旋之", "total": 11, "class": "danger", "stats": {"新": 7, "设计取消": 1, "已提测": 2, "测试中": 1, "挂起": 0}}, {"name": "欧阳福辉", "total": 11, "class": "danger", "stats": {"新": 5, "设计取消": 1, "已提测": 3, "测试中": 2, "挂起": 0}}, {"name": "吴淦淦", "total": 9, "class": "warning", "stats": {"新": 7, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 1}}, {"name": "李研锋", "total": 9, "class": "warning", "stats": {"新": 3, "设计取消": 1, "已提测": 4, "测试中": 1, "挂起": 0}}, {"name": "吕昕远", "total": 8, "class": "warning", "stats": {"新": 6, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}}, {"name": "李子涵", "total": 6, "class": "", "stats": {"新": 4, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}}, {"name": "刘政豪", "total": 5, "class": "", "stats": {"新": 3, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}}, {"name": "杨钦", "total": 5, "class": "", "stats": {"新": 0, "设计取消": 2, "已提测": 3, "测试中": 0, "挂起": 0}}, {"name": "夏绍昌", "total": 4, "class": "", "stats": {"新": 2, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}}, {"name": "刘鹏鸣", "total": 3, "class": "", "stats": {"新": 1, "设计取消": 0, "已提测": 1, "测试中": 1, "挂起": 0}}, {"name": "卢谦", "total": 2, "class": "", "stats": {"新": 1, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}}], "dev_details": [{"name": "张秋涵", "total": 21, "summary": "新2 设计取消2 已提测2 挂起2", "stats": {"新": 15, "设计取消": 2, "已提测": 2, "测试中": 0, "挂起": 2}, "stories": [{"idx": 1, "name": "【测试】【Bug转需求】【时装】白泽裙子上特效乱闪", "status": "new", "status_cn": "新", "owner": "张秋涵;王佳慧;田素垒;穆保锦;管乐怡;", "created": "2026-07-07", "id": "1121711231001196534"}, {"idx": 2, "name": "【测试】【S4】打坐技能皮肤功能 - 程序需求", "status": "new", "status_cn": "新", "owner": "张秋涵;王佳慧;穆保锦;郭冠豪;", "created": "2026-07-13", "id": "1121711231001196996"}, {"idx": 3, "name": "【测试】【S4】打坐技能皮肤功能 - 策划配置", "status": "new", "status_cn": "新", "owner": "张秋涵;王佳慧;穆保锦;郭冠豪;", "created": "2026-07-13", "id": "1121711231001196991"}, {"idx": 4, "name": "【测试】【S4】八月战令&冲销外观需求 - 发型", "status": "new", "status_cn": "新", "owner": "张爱思;张秋涵;王佳慧;王鹏越;", "created": "2026-07-13", "id": "1121711231001196971"}, {"idx": 5, "name": "【测试】【S4】八月战令&冲销外观需求 - 挂件", "status": "new", "status_cn": "新", "owner": "张爱思;张秋涵;王佳慧;王鹏越;", "created": "2026-07-13", "id": "1121711231001196961"}, {"idx": 6, "name": "【测试】时装收藏功能优化", "status": "new", "status_cn": "新", "owner": "张秋涵;戴路;王佳慧;王鹏越;", "created": "2026-07-15", "id": "1121711231001197176"}, {"idx": 7, "name": "【测试】【S4】优化穿着不可应用外观时的界面提示 - 程序需求", "status": "new", "status_cn": "新", "owner": "王佳慧;王鹏越;游双;张秋涵;", "created": "2026-07-16", "id": "1121711231001197496"}, {"idx": 8, "name": "【测试】【S4】10月战令&冲销外观需求 - 挂件", "status": "new", "status_cn": "新", "owner": "王鹏越;张爱思;王佳慧;张秋涵;", "created": "2026-07-16", "id": "1121711231001197459"}, {"idx": 9, "name": "【测试】【S4】10月战令&冲销外观需求 - 发型", "status": "new", "status_cn": "新", "owner": "张爱思;张秋涵;王佳慧;王鹏越;", "created": "2026-07-16", "id": "1121711231001197447"}, {"idx": 10, "name": "【测试】【S4】 - 直售时装 - 2026/08 - DIY外卖服 - 美术资产中可导出刺绣", "status": "new", "status_cn": "新", "owner": "张爱思;张秋涵;王佳慧;王鹏越;", "created": "2026-07-23", "id": "1121711231001198276"}, {"idx": 11, "name": "【测试】【S4】 - 直售时装 - 2026/08 - DIY外卖服 - 绣片设计", "status": "new", "status_cn": "新", "owner": "张爱思;张秋涵;王佳慧;王鹏越;", "created": "2026-07-23", "id": "1121711231001198264"}, {"idx": 12, "name": "【测试】【S4】七夕时装售卖活动", "status": "new", "status_cn": "新", "owner": "张秋涵;游双;王佳慧;王鹏越;", "created": "2026-07-24", "id": "1121711231001198332"}, {"idx": 13, "name": "【测试】【S4】 - 直售时装 - 2026/08 - DIY外卖服 - 引擎需求", "status": "new", "status_cn": "新", "owner": "张秋涵;王佳慧;王鹏越;田素垒;", "created": "2026-07-27", "id": "1121711231001198466"}, {"idx": 14, "name": "【测试】【S5】角色默认体型修改", "status": "new", "status_cn": "新", "owner": "张秋涵;王佳慧;王鹏越;田素垒;", "created": "2026-07-29", "id": "1121711231001198643"}, {"idx": 15, "name": "【测试】【S5】角色默认体型修改 - 美术需求", "status": "new", "status_cn": "新", "owner": "张爱思;张秋涵;王佳慧;王鹏越;", "created": "2026-07-29", "id": "1121711231001198639"}, {"idx": 16, "name": "【测试】新增一批可染色挂件", "status": "status_17", "status_cn": "设计取消", "owner": "方盛元;王佳慧;穆保锦;", "created": "2025-03-18", "id": "1121711231001146497"}, {"idx": 17, "name": "【测试】【商城】限时库存功能 - 程序需求 - 限时库存支持热加载", "status": "status_17", "status_cn": "设计取消", "owner": "胡贺然;穆保锦;", "created": "2025-09-03", "id": "1121711231001167052"}, {"idx": 18, "name": "【测试】发布时间[2026-08-05]-时装（衣服、头发、披风、挂件、特效、成就、时装单品或套装赠品、时装活动板、商城宣传图）", "status": "status_11", "status_cn": "已提测", "owner": "张秋涵;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198561"}, {"idx": 19, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "张秋涵;穆保锦;", "created": "2026-08-03", "id": "1121711231001198883"}, {"idx": 20, "name": "【测试】中央服支持热加载", "status": "suspended", "status_cn": "挂起", "owner": "姜骅洋;穆保锦;", "created": "2025-09-03", "id": "1121711231001167050"}, {"idx": 21, "name": "【测试】【装扮站】装扮站升级 - 下载与预览 - 程序需求", "status": "suspended", "status_cn": "挂起", "owner": "穆保锦;王佳慧;", "created": "2026-02-25", "id": "1121711231001181623"}]}, {"name": "张海志", "total": 18, "summary": "新5 设计取消5 已提测5", "stats": {"新": 9, "设计取消": 4, "已提测": 5, "测试中": 0, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】【S4】八月战令&冲销外观需求 - 头像、头像框", "status": "new", "status_cn": "新", "owner": "张爱思;王佳慧;王鹏越;张海志;", "created": "2026-07-13", "id": "1121711231001196965"}, {"idx": 2, "name": "【测试】【S4】10月战令&冲销外观需求 - 头像、头像框", "status": "new", "status_cn": "新", "owner": "张爱思;王佳慧;王鹏越;张义文;张海志;", "created": "2026-07-16", "id": "1121711231001197451"}, {"idx": 3, "name": "【测试】【S4】10月战令&冲销外观需求 - 图标需求", "status": "new", "status_cn": "新", "owner": "张义文;张海志;张秋涵;王佳慧;王鹏越;", "created": "2026-07-21", "id": "1121711231001198070"}, {"idx": 4, "name": "【测试】【S4】八月战令&冲销外观需求 - 图标需求", "status": "new", "status_cn": "新", "owner": "张义文;张海志;张秋涵;王佳慧;王鹏越;", "created": "2026-07-21", "id": "1121711231001198066"}, {"idx": 5, "name": "【测试】【S4】七夕时装售卖活动 - 图标需求", "status": "new", "status_cn": "新", "owner": "张义文;张海志;张爱思;王佳慧;王鹏越;", "created": "2026-07-21", "id": "1121711231001198059"}, {"idx": 6, "name": "【测试】【S4】七夕时装售卖活动 - 赠品需求 - 情侣头像", "status": "new", "status_cn": "新", "owner": "张海志;王佳慧;王鹏越;", "created": "2026-07-21", "id": "1121711231001198055"}, {"idx": 7, "name": "【测试】【S4】七夕时装售卖活动 - 赠品需求 - 情侣称号", "status": "new", "status_cn": "新", "owner": "张义文;张海志;张爱思;王佳慧;王鹏越;", "created": "2026-07-21", "id": "1121711231001198051"}, {"idx": 8, "name": "【测试】【S4】七夕时装售卖活动 - 赠品需求 - 个人主页摆件", "status": "new", "status_cn": "新", "owner": "张海志;张爱思;王佳慧;王鹏越;", "created": "2026-07-21", "id": "1121711231001198043"}, {"idx": 9, "name": "【测试】邮件功能拓展-玩家间邮件功能优化程序开发", "status": "new", "status_cn": "新", "owner": "张海志;张皓天;游双;王鹏越;田相龙;范慕寒;", "created": "2026-08-03", "id": "1121711231001198894"}, {"idx": 10, "name": "【测试】港澳台版本开发-师徒系统开启时间修改", "status": "status_17", "status_cn": "设计取消", "owner": "韩少华;穆保锦;", "created": "2025-04-11", "id": "1121711231001149262"}, {"idx": 11, "name": "【测试】港澳台版本开发-师徒任务完成条件修改", "status": "status_17", "status_cn": "设计取消", "owner": "韩少华;穆保锦;", "created": "2025-04-11", "id": "1121711231001149261"}, {"idx": 12, "name": "【测试】港澳台版本开发-师徒buff生效副本修改", "status": "status_17", "status_cn": "设计取消", "owner": "韩少华;穆保锦;", "created": "2025-04-11", "id": "1121711231001149260"}, {"idx": 13, "name": "【测试】港澳台版本开发-师徒商店内容修改", "status": "status_17", "status_cn": "设计取消", "owner": "韩少华;穆保锦;", "created": "2025-04-11", "id": "1121711231001149259"}, {"idx": 14, "name": "【测试】dlc03新赛季名望-图形称号", "status": "status_11", "status_cn": "已提测", "owner": "张义文;张海志;徐克寒;穆保锦;范慕寒;", "created": "2026-06-20", "id": "1121711231001194962"}, {"idx": 15, "name": "【测试】发布时间[2026-08-05]-鬼王技改", "status": "status_11", "status_cn": "已提测", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198572"}, {"idx": 16, "name": "【测试】发布时间[2026-08-05]-焚香技改", "status": "status_11", "status_cn": "已提测", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198569"}, {"idx": 17, "name": "【测试】发布时间[2026-08-05]-击杀特效、UI外观（头像、头像框、名片皮肤、个人主页贴纸）", "status": "status_11", "status_cn": "已提测", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198565"}, {"idx": 18, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "张海志;穆保锦;", "created": "2026-08-03", "id": "1121711231001198882"}]}, {"name": "张家像", "total": 17, "summary": "新1 设计取消1 已提测1 挂起1", "stats": {"新": 12, "设计取消": 2, "已提测": 2, "测试中": 0, "挂起": 1}, "stories": [{"idx": 1, "name": "幽姬团队副本-关卡制作 - 测试需求", "status": "new", "status_cn": "新", "owner": "张家像;穆保锦;", "created": "2026-04-08", "id": "1121711231001187296"}, {"idx": 2, "name": "【测试】新增副本类型-活动副本", "status": "new", "status_cn": "新", "owner": "王鹏越;杨家鸣;林硕;游双;王华卓;王延鹏;赵艳松;张家像;", "created": "2026-06-25", "id": "1121711231001195216"}, {"idx": 3, "name": "【测试】S4-高难本玩家增益buff配置4", "status": "new", "status_cn": "新", "owner": "傅佳;张家像;王华卓;王鹏越;", "created": "2026-07-20", "id": "1121711231001197768"}, {"idx": 4, "name": "【测试】S4-高难本玩家增益buff配置3", "status": "new", "status_cn": "新", "owner": "傅佳;张家像;王华卓;王鹏越;", "created": "2026-07-20", "id": "1121711231001197766"}, {"idx": 5, "name": "【测试】S4-高难本玩家增益buff配置2", "status": "new", "status_cn": "新", "owner": "傅佳;张家像;王华卓;王鹏越;", "created": "2026-07-20", "id": "1121711231001197764"}, {"idx": 6, "name": "【测试】大型五人本-青云剑冢-特定模型可配置不显示水面倒影 优化需求", "status": "new", "status_cn": "新", "owner": "张家像;杨立秋;王鹏越;田素垒;", "created": "2026-07-21", "id": "1121711231001197782"}, {"idx": 7, "name": "【测试】幽姬团队副本-关卡制作-boss时间轴整理-普通难度", "status": "new", "status_cn": "新", "owner": "张家像;王华卓;王鹏越;葛益昕;", "created": "2026-07-22", "id": "1121711231001198164"}, {"idx": 8, "name": "【测试】260819数值内容-幽姬动态&困难数值配置", "status": "new", "status_cn": "新", "owner": "张家像;徐克寒;王鹏越;", "created": "2026-07-28", "id": "1121711231001198549"}, {"idx": 9, "name": "【测试】260812数值内容-幽姬普通数值配置", "status": "new", "status_cn": "新", "owner": "张家像;徐克寒;王鹏越;黄振宇;", "created": "2026-07-28", "id": "1121711231001198541"}, {"idx": 10, "name": "【测试】260805数值内容-大秘境开放新层数数值配置", "status": "new", "status_cn": "新", "owner": "张家像;徐克寒;王鹏越;", "created": "2026-07-28", "id": "1121711231001198533"}, {"idx": 11, "name": "【测试】大秘境玩法-词缀轮换修改&低保层数提高", "status": "new", "status_cn": "新", "owner": "王鹏越;王华卓;张家像;", "created": "2026-07-29", "id": "1121711231001198625"}, {"idx": 12, "name": "【测试】大秘境玩法-新词缀体验调优", "status": "new", "status_cn": "新", "owner": "王鹏越;杨立秋;张家像;", "created": "2026-08-03", "id": "1121711231001198873"}, {"idx": 13, "name": "【测试】S4-五人副本-单人秘境模式 - 引导任务", "status": "status_17", "status_cn": "设计取消", "owner": "杨立秋;穆保锦;", "created": "2026-05-06", "id": "1121711231001191136"}, {"idx": 14, "name": "【测试】S4-五人副本-单人秘境模式-程序需求", "status": "status_17", "status_cn": "设计取消", "owner": "杨立秋;穆保锦;", "created": "2026-05-11", "id": "1121711231001191445"}, {"idx": 15, "name": "【测试】发布时间[2026-08-05]-找徐少青确认是否有新的副本线路可提测", "status": "status_11", "status_cn": "已提测", "owner": "张家像;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198566"}, {"idx": 16, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "张家像;穆保锦;", "created": "2026-08-03", "id": "1121711231001198881"}, {"idx": 17, "name": "【测试】大秘境玩法-副本生涯相关", "status": "suspended", "status_cn": "挂起", "owner": "李孟楠;穆保锦;", "created": "2025-11-26", "id": "1121711231001175345"}]}, {"name": "周旋之", "total": 11, "summary": "新1 设计取消1 已提测1 测试中1", "stats": {"新": 7, "设计取消": 1, "已提测": 2, "测试中": 1, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】【S4】八月战令&冲销外观需求 - 飞剑", "status": "new", "status_cn": "新", "owner": "王佳慧;王鹏越;周旋之;", "created": "2026-07-13", "id": "1121711231001196957"}, {"idx": 2, "name": "【测试】【S4】10月战令&冲销外观需求 - 飞剑", "status": "new", "status_cn": "新", "owner": "周旋之;王佳慧;王鹏越;张爱思;", "created": "2026-07-16", "id": "1121711231001197455"}, {"idx": 3, "name": "【测试】七夕活动-纤云弄巧（割草刷怪）玩法优化-数值", "status": "new", "status_cn": "新", "owner": "周旋之;张皓天;徐克寒;王鹏越;范慕寒;邓京晶;", "created": "2026-07-21", "id": "1121711231001197965"}, {"idx": 4, "name": "【测试】七夕活动-纤云弄巧（割草刷怪）玩法优化-程序需求", "status": "new", "status_cn": "新", "owner": "周旋之;张皓天;游双;王鹏越;田相龙;范慕寒;赵艳松;邓京晶;", "created": "2026-07-21", "id": "1121711231001197953"}, {"idx": 5, "name": "【测试】百花劫煞优化-碧瑶战斗设计与制作", "status": "new", "status_cn": "新", "owner": "周旋之;张皓天;王鹏越;邓京晶;郭冠豪;", "created": "2026-07-23", "id": "1121711231001198271"}, {"idx": 6, "name": "【测试】孔明灯多人效果开销优化", "status": "new", "status_cn": "新", "owner": "周旋之;徐杰;王鹏越;祁喆;", "created": "2026-07-27", "id": "1121711231001198483"}, {"idx": 7, "name": "【测试】百花劫煞优化-程序需求", "status": "new", "status_cn": "新", "owner": "周旋之;张皓天;游双;王鹏越;邓京晶;", "created": "2026-07-30", "id": "1121711231001198689"}, {"idx": 8, "name": "【测试】S4版本数值内容开发-代币周清理功能", "status": "status_17", "status_cn": "设计取消", "owner": "穆保锦;", "created": "2026-04-22", "id": "1121711231001190591"}, {"idx": 9, "name": "【测试】发布时间[2026-08-05]-载具（飞剑、坐骑）", "status": "status_11", "status_cn": "已提测", "owner": "周旋之;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198563"}, {"idx": 10, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "周旋之;穆保锦;", "created": "2026-08-03", "id": "1121711231001198879"}, {"idx": 11, "name": "【测试】在win7电脑上安装launcher并下载和安装游戏", "status": "status_7", "status_cn": "测试中", "owner": "周旋之;李子涵;田素垒;穆保锦;", "created": "2026-07-15", "id": "1121711231001197121"}]}, {"name": "欧阳福辉", "total": 11, "summary": "新2 设计取消2 已提测2 测试中2", "stats": {"新": 5, "设计取消": 1, "已提测": 3, "测试中": 2, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】【S4】八月战令&冲销外观需求 - 休闲动作", "status": "new", "status_cn": "新", "owner": "张爱思;欧阳福辉;王佳慧;王鹏越;", "created": "2026-07-14", "id": "1121711231001197041"}, {"idx": 2, "name": "【测试】【S4】10月战令&冲销外观需求 - 休闲动作", "status": "new", "status_cn": "新", "owner": "张爱思;王佳慧;王鹏越;欧阳福辉;", "created": "2026-07-16", "id": "1121711231001197443"}, {"idx": 3, "name": "【测试】【S4】七夕时装售卖活动 - 赠品需求 - 双人动作依偎", "status": "new", "status_cn": "新", "owner": "张爱思;欧阳福辉;王佳慧;王鹏越;", "created": "2026-07-21", "id": "1121711231001198047"}, {"idx": 4, "name": "【测试】合并后导出地图信息", "status": "new", "status_cn": "新", "owner": "欧阳福辉;王鹏越;赵艳松;", "created": "2026-07-22", "id": "1121711231001198113"}, {"idx": 5, "name": "【测试】【优化】跨世界导航功能恢复-劫烬青云山麓需要增加出口npc配置", "status": "new", "status_cn": "新", "owner": "欧阳福辉;王鹏越;祁喆;范慕寒;", "created": "2026-07-23", "id": "1121711231001198217"}, {"idx": 6, "name": "【测试】表情包配置功能优化", "status": "status_17", "status_cn": "设计取消", "owner": "祁喆;王鹏越;", "created": "2026-07-29", "id": "1121711231001198623"}, {"idx": 7, "name": "【测试】发布时间[2026-08-05]-UI外观（图形称号）", "status": "status_11", "status_cn": "已提测", "owner": "欧阳福辉;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198567"}, {"idx": 8, "name": "【测试】发布时间[2026-08-05]-休闲（休闲动作、置景动作）", "status": "status_11", "status_cn": "已提测", "owner": "欧阳福辉;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198564"}, {"idx": 9, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "欧阳福辉;穆保锦;", "created": "2026-08-03", "id": "1121711231001198887"}, {"idx": 10, "name": "【测试】幽姬团队副本-场景需求", "status": "status_7", "status_cn": "测试中", "owner": "欧阳福辉;王华卓;田素垒;穆保锦;艾美;葛益昕;", "created": "2026-07-09", "id": "1121711231001196715"}, {"idx": 11, "name": "【测试】【优化】跨世界导航功能恢复", "status": "status_7", "status_cn": "测试中", "owner": "欧阳福辉;祁喆;王鹏越;", "created": "2026-07-16", "id": "1121711231001197378"}]}, {"name": "吴淦淦", "total": 9, "summary": "新1 已提测1 挂起1", "stats": {"新": 7, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 1}, "stories": [{"idx": 1, "name": "【测试】【S4赛季（dlc03）】- 神兵（橙武）   - 星河 - 二阶段任务 ", "status": "new", "status_cn": "新", "owner": "吴淦淦;徐克寒;王鹏越;穆保锦;", "created": "2026-06-21", "id": "1121711231001194969"}, {"idx": 2, "name": "【测试】【S4赛季（0819版本）】七夕活动 - 任务 - 制作", "status": "new", "status_cn": "新", "owner": "吴淦淦;徐杰;穆保锦;", "created": "2026-07-14", "id": "1121711231001197067"}, {"idx": 3, "name": "【测试】追踪任务规则调整需求", "status": "new", "status_cn": "新", "owner": "王鹏越;徐杰;吴淦淦;", "created": "2026-07-20", "id": "1121711231001197716"}, {"idx": 4, "name": "【测试】任务逻辑细节优化 - 任务增加快捷使用技能/物品的功能需求", "status": "new", "status_cn": "新", "owner": "王鹏越;徐杰;吴淦淦;", "created": "2026-07-20", "id": "1121711231001197698"}, {"idx": 5, "name": "【测试】天玺百炼玩法优化-程序需求", "status": "new", "status_cn": "新", "owner": "吴淦淦;张拯;游双;王鹏越;田相龙;范慕寒;", "created": "2026-07-20", "id": "1121711231001197675"}, {"idx": 6, "name": "【测试】【S4赛季（0819版本）】七夕活动 - 活动界面逻辑优化", "status": "new", "status_cn": "新", "owner": "吴淦淦;游双;王鹏越;田相龙;范慕寒;邓京晶;", "created": "2026-07-27", "id": "1121711231001198476"}, {"idx": 7, "name": "【测试】下次周更前留一个新版本客户端停留在服务器选择界面", "status": "new", "status_cn": "新", "owner": "吴淦淦;王鹏越;", "created": "2026-07-29", "id": "1121711231001198606"}, {"idx": 8, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "吴淦淦;穆保锦;", "created": "2026-08-03", "id": "1121711231001198878"}, {"idx": 9, "name": "【测试】接入timetool.dll/timetool.so", "status": "suspended", "status_cn": "挂起", "owner": "吴淦淦;田相龙;穆保锦;", "created": "2025-10-31", "id": "1121711231001172665"}]}, {"name": "李研锋", "total": 9, "summary": "新1 设计取消1 已提测1 测试中1", "stats": {"新": 3, "设计取消": 1, "已提测": 4, "测试中": 1, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】【DLC3.5】七脉会武玩法——程序需求", "status": "new", "status_cn": "新", "owner": "李研锋;游双;王鹏越;赵艳松;郭冠豪;", "created": "2026-07-22", "id": "1121711231001198162"}, {"idx": 2, "name": "【测试】优化天工机巧盘Widget相关性能", "status": "new", "status_cn": "新", "owner": "李研锋;王鹏越;田相龙;田素垒;", "created": "2026-07-28", "id": "1121711231001198503"}, {"idx": 3, "name": "【测试】优化天工包裹已准备格子效果", "status": "new", "status_cn": "新", "owner": "李研锋;王鹏越;田相龙;祁喆;", "created": "2026-07-31", "id": "1121711231001198748"}, {"idx": 4, "name": "【测试】天工机巧盘系统引导任务", "status": "status_17", "status_cn": "设计取消", "owner": "范慕寒;穆保锦;", "created": "2026-06-17", "id": "1121711231001194729"}, {"idx": 5, "name": "【测试】发布时间[2026-08-05]-青云技改", "status": "status_11", "status_cn": "已提测", "owner": "李研锋;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198571"}, {"idx": 6, "name": "【测试】发布时间[2026-08-05]-天音技改", "status": "status_11", "status_cn": "已提测", "owner": "李研锋;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198570"}, {"idx": 7, "name": "【测试】天工引导活动-逻辑优化", "status": "status_11", "status_cn": "已提测", "owner": "徐克寒;李研锋;游双;王延鹏;王鹏越;田相龙;范慕寒;邓京晶;", "created": "2026-07-30", "id": "1121711231001198665"}, {"idx": 8, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "李研锋;穆保锦;", "created": "2026-08-03", "id": "1121711231001198885"}, {"idx": 9, "name": "【测试】合服功能-账号仓库合服逻辑处理", "status": "status_7", "status_cn": "测试中", "owner": "穆保锦;李研锋;徐克寒;徐少青;游双;", "created": "2026-07-03", "id": "1121711231001196259"}]}, {"name": "吕昕远", "total": 8, "summary": "新2 已提测2", "stats": {"新": 6, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】【S4】八月战令&冲销外观需求 - 策划配置", "status": "new", "status_cn": "新", "owner": "王佳慧;王鹏越;吕昕远;", "created": "2026-07-13", "id": "1121711231001196967"}, {"idx": 2, "name": "【测试】【S4】10月战令&冲销外观需求 - 策划配置", "status": "new", "status_cn": "新", "owner": "吕昕远;王鹏越;王佳慧;", "created": "2026-07-16", "id": "1121711231001197461"}, {"idx": 3, "name": "【测试】260819数值内容-幽姬动态&困难星历&宝库配置", "status": "new", "status_cn": "新", "owner": "吕昕远;徐克寒;王鹏越;", "created": "2026-07-28", "id": "1121711231001198551"}, {"idx": 4, "name": "【测试】260819数值内容-消费返利配置", "status": "new", "status_cn": "新", "owner": "吕昕远;徐克寒;王鹏越;", "created": "2026-07-28", "id": "1121711231001198547"}, {"idx": 5, "name": "【测试】260819数值内容-战令配置", "status": "new", "status_cn": "新", "owner": "吕昕远;徐克寒;王鹏越;", "created": "2026-07-28", "id": "1121711231001198545"}, {"idx": 6, "name": "【测试】260812数值内容-幽姬普通星历&宝库配置", "status": "new", "status_cn": "新", "owner": "徐克寒;吕昕远;王莹;王鹏越;黄振宇;", "created": "2026-07-28", "id": "1121711231001198543"}, {"idx": 7, "name": "260805数值内容-璇玑宝库-团本奖励库水麒麟困难", "status": "status_11", "status_cn": "已提测", "owner": "王鹏越;吕昕远;徐克寒;王莹;", "created": "2026-07-29", "id": "1121711231001198604"}, {"idx": 8, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "吕昕远;穆保锦;", "created": "2026-08-03", "id": "1121711231001198877"}]}, {"name": "李子涵", "total": 6, "summary": "新1 已提测1", "stats": {"新": 4, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】技能试炼场优化-S4迭代-程序需求", "status": "new", "status_cn": "新", "owner": "王鹏越;游双;祖钊霖;李子涵;", "created": "2026-03-05", "id": "1121711231001182277"}, {"idx": 2, "name": "【测试】七夕活动-碧瑶主题曲", "status": "new", "status_cn": "新", "owner": "刘翼凡;戴路;李子涵;穆保锦;", "created": "2026-07-07", "id": "1121711231001196502"}, {"idx": 3, "name": "【测试】中秋国庆活动-程序需求", "status": "new", "status_cn": "新", "owner": "张皓天;李子涵;游双;王鹏越;范慕寒;邓京晶;", "created": "2026-07-29", "id": "1121711231001198597"}, {"idx": 4, "name": "【测试】队伍快捷消息盘功能", "status": "new", "status_cn": "新", "owner": "李子涵;王鹏越;祁喆;", "created": "2026-07-31", "id": "1121711231001198764"}, {"idx": 5, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "李子涵;穆保锦;", "created": "2026-08-03", "id": "1121711231001198884"}, {"idx": 6, "name": "【测试】老任务友好度测试 - 体毛走位的问题总单", "status": "status_18", "status_cn": "status_18", "owner": "徐杰;穆保锦;李子涵;", "created": "2026-05-28", "id": "1121711231001193314"}]}, {"name": "刘政豪", "total": 5, "summary": "新2 已提测2", "stats": {"新": 3, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】变强引导系统", "status": "new", "status_cn": "新", "owner": "王鹏越;刘政豪;祁喆;", "created": "2026-07-20", "id": "1121711231001197667"}, {"idx": 2, "name": "【测试】烽行险道玩法禁止判定为同步器的角色参与", "status": "new", "status_cn": "新", "owner": "刘政豪;张拯;游双;王鹏越;范慕寒;邓京晶;", "created": "2026-07-27", "id": "1121711231001198373"}, {"idx": 3, "name": "【测试】260819数值内容-世界等级数值配置", "status": "new", "status_cn": "新", "owner": "刘政豪;徐克寒;王鹏越;", "created": "2026-07-28", "id": "1121711231001198553"}, {"idx": 4, "name": "【测试】260805数值内容-世界等级掉落配置", "status": "status_11", "status_cn": "已提测", "owner": "刘政豪;徐克寒;王鹏越;", "created": "2026-07-28", "id": "1121711231001198537"}, {"idx": 5, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "刘政豪;穆保锦;", "created": "2026-08-03", "id": "1121711231001198874"}]}, {"name": "杨钦", "total": 5, "summary": "设计取消3 已提测3", "stats": {"新": 0, "设计取消": 2, "已提测": 3, "测试中": 0, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】S4版本数值内容开发-单人秘境宠物战斗玩法程序功能-屏蔽测试", "status": "status_17", "status_cn": "设计取消", "owner": "徐克寒;穆保锦;", "created": "2026-04-21", "id": "1121711231001190324"}, {"idx": 2, "name": "【测试】S4版本数值内容开发-单人秘境宠物战斗玩法开发-战斗技能配置-屏蔽测试", "status": "status_17", "status_cn": "设计取消", "owner": "徐克寒;穆保锦;", "created": "2026-05-08", "id": "1121711231001191303"}, {"idx": 3, "name": "【测试】发布时间[2026-08-05]-华裳之轮（盲盒抽奖）功能、女娲石商店、盲盒活动板", "status": "status_11", "status_cn": "已提测", "owner": "杨钦;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198568"}, {"idx": 4, "name": "【测试】发布时间[2026-08-05]-武器皮肤、技能皮肤", "status": "status_11", "status_cn": "已提测", "owner": "杨钦;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198562"}, {"idx": 5, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "杨钦;穆保锦;", "created": "2026-08-03", "id": "1121711231001198886"}]}, {"name": "夏绍昌", "total": 4, "summary": "新2 已提测2", "stats": {"新": 2, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】【S4赛季（dlc03）】- 神兵（橙武）   - 星河-效果设计及配置", "status": "new", "status_cn": "新", "owner": "夏绍昌;徐克寒;王鹏越;郭冠豪;", "created": "2026-07-23", "id": "1121711231001198266"}, {"idx": 2, "name": "幽姬团队副本-关卡制作 - 测试需求", "status": "new", "status_cn": "新", "owner": "张家像;王鹏越;", "created": "2026-08-03", "id": "1121711231001198889"}, {"idx": 3, "name": "【测试】发布时间[2026-08-05]-合欢、灵汐技改，战斗法宝修改", "status": "status_11", "status_cn": "已提测", "owner": "夏绍昌;穆保锦;穆保锦;", "created": "2026-07-29", "id": "1121711231001198573"}, {"idx": 4, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "夏绍昌;穆保锦;", "created": "2026-08-03", "id": "1121711231001198880"}]}, {"name": "刘鹏鸣", "total": 3, "summary": "新1 已提测1 测试中1", "stats": {"新": 1, "设计取消": 0, "已提测": 1, "测试中": 1, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】【S4】单人挂机玩法-增加团本怪物", "status": "new", "status_cn": "新", "owner": "刘鹏鸣;张皓天;徐克寒;穆保锦;范慕寒;郭冠豪;", "created": "2026-07-15", "id": "1121711231001197125"}, {"idx": 2, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "刘鹏鸣;穆保锦;", "created": "2026-08-03", "id": "1121711231001198875"}, {"idx": 3, "name": "【测试】260805数值内容-炼器开放+10配置", "status": "status_7", "status_cn": "测试中", "owner": "刘鹏鸣;徐克寒;王鹏越;", "created": "2026-07-28", "id": "1121711231001198535"}]}, {"name": "卢谦", "total": 2, "summary": "新1 已提测1", "stats": {"新": 1, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "stories": [{"idx": 1, "name": "【测试】一键宏优化——程序功能", "status": "new", "status_cn": "新", "owner": "戴路;王鹏越;郭冠豪;游双;赵艳松;卢谦;", "created": "2026-07-17", "id": "1121711231001197525"}, {"idx": 2, "name": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "status_11", "status_cn": "已提测", "owner": "卢谦;穆保锦;", "created": "2026-08-03", "id": "1121711231001198876"}]}], "no_work": []};
+var STATUS_CLASS={"新":"tag-new","设计取消":"tag-cancelled","已提测":"tag-submitted","测试中":"tag-testing","挂起":"tag-suspended"};
+var TAPD_URL="https://www.tapd.cn/21711231/prong/stories/view/";
+var activeFilters={"新":true,"设计取消":true,"已提测":true,"测试中":true,"挂起":true};
+function renderCards(){var gs=DATA.global_stats;var cards=[{cls:"total",num:DATA.total,label:"需求总数"},{cls:"new",num:gs["新"]||0,label:"新"},{cls:"cancelled",num:gs["设计取消"]||0,label:"设计取消"},{cls:"submitted",num:gs["已提测"]||0,label:"已提测"},{cls:"testing",num:gs["测试中"]||0,label:"测试中"},{cls:"suspended",num:gs["挂起"]||0,label:"挂起"}];document.getElementById("cards").innerHTML=cards.map(function(c){return'<div class="card '+c.cls+'"><div class="number">'+c.num+'</div><div class="label">'+c.label+'</div></div>'}).join("")}
+function renderSummary(){var rows=DATA.summary_rows;var h='<thead><tr><th>开发人员</th><th>合计</th><th>新</th><th>设计取消</th><th>已提测</th><th>测试中</th><th>挂起</th></tr></thead>';var b=rows.map(function(r){return'<tr class="'+r.class+'"><td>'+r.name+'</td><td>'+r.total+'</td><td>'+(r.stats["新"]||0)+'</td><td>'+(r.stats["设计取消"]||0)+'</td><td>'+(r.stats["已提测"]||0)+'</td><td>'+(r.stats["测试中"]||0)+'</td><td>'+(r.stats["挂起"]||0)+'</td></tr>'}).join("");document.getElementById("summary-table").innerHTML=h+"<tbody>"+b+"</tbody>"}
+function renderAccordion(){var groups=DATA.dev_details;var html=groups.map(function(g,gi){var rows=g.stories.map(function(s){return'<tr data-status="'+s.status_cn+'" data-dev="'+g.name+'"><td>'+s.idx+'</td><td><span class="tag '+(STATUS_CLASS[s.status_cn]||"")+'">'+s.status_cn+'</span></td><td><a href="'+TAPD_URL+s.id+'" target="_blank">'+s.name+'</a></td><td>'+s.owner+'</td><td>'+s.created+'</td></tr>'}).join("");return'<div class="accordion-group open" id="group-'+gi+'"><div class="accordion-header" onclick="toggleGroup('+gi+')"><div><span class="dev-name">'+g.name+'</span><span class="dev-summary">'+g.total+'条 · '+g.summary+'</span></div><span class="toggle">▼</span></div><div class="accordion-body"><table class="detail-table"><thead><tr><th style="width:50px">#</th><th style="width:90px">状态</th><th>需求标题</th><th style="width:100px">处理人</th><th style="width:100px">创建时间</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'}).join("");document.getElementById("accordion").innerHTML=html}
+function toggleGroup(i){document.getElementById("group-"+i).classList.toggle("open")}
+function toggleAll(){document.querySelectorAll(".accordion-group").forEach(function(g){g.classList.toggle("open")})}
+function toggleFilter(btn,status){activeFilters[status]=!activeFilters[status];if(activeFilters[status]){btn.classList.remove("off");btn.classList.add("active")}else{btn.classList.remove("active");btn.classList.add("off")}filterAll()}
+function filterAll(){var q=(document.getElementById("search").value||"").toLowerCase();document.querySelectorAll(".accordion-group").forEach(function(group){var visible=0;group.querySelectorAll("tbody tr").forEach(function(row){var ok=activeFilters[row.dataset.status]&&(!q||row.textContent.toLowerCase().indexOf(q)>=0);if(ok){row.classList.remove("hidden");visible++}else{row.classList.add("hidden")}});if(visible===0){group.classList.add("hidden")}else{group.classList.remove("hidden")}})}
+renderCards();renderSummary();renderAccordion();
+</script></body></html>
