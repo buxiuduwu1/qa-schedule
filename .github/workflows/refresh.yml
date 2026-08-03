@@ -34,3 +34,10 @@ jobs:
           TAPD_TOKEN: ${{ secrets.TAPD_TOKEN }}
           GH_PAT: ${{ secrets.GH_PAT }}
         run: python scripts/refresh_qa_schedule.py
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy . --project-name qa-schedule --branch main
