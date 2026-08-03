@@ -3,1503 +3,251 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QA排期看板 · 诛仙世界</title>
+<title>QA 排期看板 · 诛仙世界</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-  background: #0f1419; color: #e7e9ea; line-height: 1.5;
-  min-height: 100vh;
-}
-.container { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
+body { background:#111827; color:#e5e7eb; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; padding:20px; max-width:1200px; margin:0 auto; }
+.header { text-align:center; padding:20px 0 10px; }
+.header h1 { font-size:24px; color:#f9fafb; }
+.header .sub { font-size:13px; color:#9ca3af; margin-top:4px; }
+.header .refresh { font-size:12px; color:#6b7280; margin-top:2px; }
 
-/* Header */
-.header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-.header h1 { font-size: 24px; font-weight: 700; color: #fff; }
-.header .subtitle { color: #71767b; font-size: 13px; }
-.header .update-time { color: #71767b; font-size: 12px; text-align: right; }
+/* Summary cards */
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin:16px 0; }
+.card { background:#1f2937; border-radius:10px; padding:16px; text-align:center; border-left:4px solid #374151; }
+.card .num { font-size:28px; font-weight:700; }
+.card .label { font-size:13px; color:#9ca3af; margin-top:4px; }
+.card-new { border-left-color:#FF6770; } .card-new .num { color:#FF6770; }
+.card-cancelled { border-left-color:#FAA23B; } .card-cancelled .num { color:#FAA23B; }
+.card-submitted { border-left-color:#70B400; } .card-submitted .num { color:#70B400; }
+.card-testing { border-left-color:#0D68FF; } .card-testing .num { color:#0D68FF; }
+.card-suspended { border-left-color:#9CA3AF; } .card-suspended .num { color:#9CA3AF; }
+.card-total { border-left-color:#8b5cf6; } .card-total .num { color:#8b5cf6; }
 
-/* Summary Cards */
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
-.card { background: #1a1f26; border-radius: 12px; padding: 16px 20px; border: 1px solid #2f3336; }
-.card .label { font-size: 12px; color: #71767b; margin-bottom: 4px; }
-.card .value { font-size: 28px; font-weight: 700; }
-.card.total .value { color: #e7e9ea; }
-.card.new .value { color: #ff6770; }
-.card.cancelled .value { color: #faa23b; }
-.card.testing .value { color: #0d68ff; }
-.card.submitted .value { color: #70b400; }
-.card.suspended .value { color: #9ca3af; }
+/* Dev overview table */
+.table-wrap { overflow-x:auto; margin:20px 0; background:#1f2937; border-radius:10px; padding:4px; }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+th { background:#374151; color:#d1d5db; font-weight:600; padding:10px 12px; text-align:left; white-space:nowrap; }
+td { padding:8px 12px; border-bottom:1px solid #374151; }
+tr:hover td { background:#283548; }
+.badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:700; color:#fff; min-width:28px; text-align:center; }
+.badge-new { background:#FF6770; }
+.badge-cancelled { background:#FAA23B; }
+.badge-submitted { background:#70B400; }
+.badge-testing { background:#0D68FF; }
+.badge-suspended { background:#9CA3AF; }
+.row-hot { background:#7f1d1d22; }
+.row-warm { background:#78350f22; }
 
-/* Section Title */
-.section-title { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-.section-title .badge { font-size: 11px; background: #1a1f26; border: 1px solid #2f3336; border-radius: 20px; padding: 2px 10px; color: #71767b; font-weight: 400; }
-
-/* Table */
-.table-wrap { background: #1a1f26; border-radius: 12px; border: 1px solid #2f3336; overflow: hidden; margin-bottom: 24px; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { background: #161b22; color: #8b949e; font-weight: 500; text-align: left; padding: 10px 14px; border-bottom: 1px solid #2f3336; white-space: nowrap; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-td { padding: 10px 14px; border-bottom: 1px solid #1e242b; vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: #161b22; }
-
-/* Status Tags */
-.tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.tag-new { background: rgba(255,103,112,0.15); color: #ff6770; }
-.tag-cancelled { background: rgba(250,162,59,0.15); color: #faa23b; }
-.tag-submitted { background: rgba(112,180,0,0.15); color: #70b400; }
-.tag-testing { background: rgba(13,104,255,0.15); color: #0d68ff; }
-.tag-suspended { background: rgba(156,163,175,0.15); color: #9ca3af; }
-
-/* Person row highlight */
-.row-hot td { background: rgba(255,103,112,0.06); }
-.row-warm td { background: rgba(250,162,59,0.06); }
+/* Search & filter toolbar */
+.toolbar { display:flex; flex-wrap:wrap; gap:10px; margin:16px 0; align-items:center; }
+.toolbar input { flex:1; min-width:200px; padding:8px 14px; background:#1f2937; border:1px solid #374151; border-radius:8px; color:#e5e7eb; font-size:14px; outline:none; }
+.toolbar input:focus { border-color:#8b5cf6; }
+.filter-btns { display:flex; gap:6px; flex-wrap:wrap; }
+.fbtn { padding:6px 14px; border-radius:8px; border:1px solid #374151; background:#1f2937; color:#9ca3af; cursor:pointer; font-size:13px; transition:all .2s; }
+.fbtn:hover { background:#374151; }
+.fbtn.active { background:#8b5cf6; border-color:#8b5cf6; color:#fff; }
+.toggle-all { padding:6px 14px; border-radius:8px; border:1px solid #374151; background:#1f2937; color:#9ca3af; cursor:pointer; font-size:13px; }
+.toggle-all:hover { background:#374151; }
 
 /* Accordion */
-.accordion { margin-bottom: 24px; }
-.accordion-group { background: #1a1f26; border-radius: 12px; border: 1px solid #2f3336; margin-bottom: 8px; overflow: hidden; }
-.accordion-header {
-  display: flex; align-items: center; padding: 12px 16px; cursor: pointer;
-  user-select: none; gap: 10px; transition: background 0.15s;
-}
-.accordion-header:hover { background: #161b22; }
-.accordion-header .arrow { font-size: 10px; color: #71767b; transition: transform 0.2s; width: 16px; text-align: center; }
-.accordion-header.open .arrow { transform: rotate(90deg); }
-.accordion-header .person-name { font-weight: 600; font-size: 14px; color: #e7e9ea; }
-.accordion-header .stats { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
-.accordion-header .stat-item { font-size: 11px; padding: 2px 8px; border-radius: 12px; background: #161b22; color: #8b949e; }
-.accordion-header .stat-item.highlight { color: #ff6770; font-weight: 600; }
-.accordion-body { display: none; }
-.accordion-body.open { display: block; }
-.accordion-body table { font-size: 12px; }
-.accordion-body th { font-size: 11px; padding: 8px 12px; }
-.accordion-body td { padding: 8px 12px; }
+.accordion { margin:16px 0; }
+.acc-group { margin-bottom:12px; background:#1f2937; border-radius:10px; overflow:hidden; }
+.acc-header { padding:12px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; border-left:4px solid #374151; transition:background .2s; }
+.acc-header:hover { background:#283548; }
+.acc-header h3 { font-size:15px; color:#f3f4f6; }
+.acc-header .acc-total { font-size:13px; color:#9ca3af; }
+.acc-header .acc-badges { display:flex; gap:4px; margin-left:auto; margin-right:12px; }
+.acc-arrow { transition:transform .3s; font-size:12px; color:#6b7280; }
+.acc-group.open .acc-arrow { transform:rotate(90deg); }
+.acc-body { display:none; padding:0 16px 12px; }
+.acc-group.open .acc-body { display:block; }
+.acc-item { display:flex; align-items:center; padding:6px 0; border-bottom:1px solid #1f2937; font-size:13px; gap:8px; }
+.acc-item:last-child { border-bottom:none; }
+.acc-item .st-tag { flex-shrink:0; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:700; color:#fff; }
+.acc-item .st-link { flex:1; color:#93c5fd; text-decoration:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.acc-item .st-link:hover { text-decoration:underline; }
+.acc-item .st-meta { flex-shrink:0; color:#6b7280; font-size:11px; }
 
-/* Search & Filter */
-.toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-.search-input {
-  background: #1a1f26; border: 1px solid #2f3336; border-radius: 8px;
-  color: #e7e9ea; padding: 8px 14px; font-size: 13px; width: 260px; outline: none;
-}
-.search-input:focus { border-color: #0d68ff; }
-.search-input::placeholder { color: #484f56; }
-.filter-btn {
-  background: #1a1f26; border: 1px solid #2f3336; border-radius: 20px;
-  color: #8b949e; padding: 5px 14px; font-size: 12px; cursor: pointer;
-  transition: all 0.15s;
-}
-.filter-btn:hover { border-color: #484f56; color: #e7e9ea; }
-.filter-btn.active { border-color: #0d68ff; color: #0d68ff; background: rgba(13,104,255,0.1); }
-.filter-btn.off { opacity: 0.4; text-decoration: line-through; }
-
-/* Link */
-a { color: #58a6ff; text-decoration: none; }
-a:hover { text-decoration: underline; }
+.tag-new { background:#FF6770; }
+.tag-cancelled { background:#FAA23B; }
+.tag-submitted { background:#70B400; }
+.tag-testing { background:#0D68FF; }
+.tag-suspended { background:#9CA3AF; }
 
 /* Footer */
-.footer { text-align: center; color: #484f56; font-size: 11px; padding: 20px 0; }
+.footer { text-align:center; padding:20px 0; color:#4b5563; font-size:12px; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2f3336; border-radius: 3px; }
-
-/* Responsive */
-@media (max-width: 768px) {
-  .cards { grid-template-columns: repeat(3, 1fr); }
-  .card { padding: 12px 14px; }
-  .card .value { font-size: 22px; }
-  .search-input { width: 100%; }
-  th, td { padding: 8px 10px; font-size: 11px; }
+/* Mobile */
+@media (max-width:640px) {
+  body { padding:10px; }
+  .header h1 { font-size:18px; }
+  .cards { grid-template-columns:repeat(3,1fr); gap:8px; }
+  .card { padding:10px; }
+  .card .num { font-size:22px; }
+  .acc-item { flex-wrap:wrap; }
 }
 
-.people-count { font-size: 12px; color: #71767b; }
-.people-count span { color: #70b400; font-weight: 600; }
+.hidden { display:none !important; }
+.no-results { text-align:center; padding:40px; color:#6b7280; }
 </style>
 </head>
 <body>
-<div class="container">
 
-<!-- Header -->
 <div class="header">
-  <div>
-    <h1>QA排期看板</h1>
-    <div class="subtitle">诛仙世界 · 项目测试</div>
-  </div>
-  <div class="update-time">数据更新时间<br>2026-07-31 11:22</div>
+  <h1>🔧 QA 测试需求排期看板</h1>
+  <div class="sub">诛仙世界 · 项目测试 / 任务玩法 / 数值系统 / 小型团本07-幽姬</div>
+  <div class="refresh">📅 数据更新于 2026-08-03 11:55 CST · 共 27 条需求</div>
 </div>
 
-<!-- Summary Cards -->
-<div class="cards">
-  <div class="card total">
-    <div class="label">需求总数</div>
-    <div class="value">110</div>
-  </div>
-  <div class="card new">
-    <div class="label">新</div>
-    <div class="value">75</div>
-  </div>
-  <div class="card cancelled">
-    <div class="label">设计取消</div>
-    <div class="value">13</div>
-  </div>
-  <div class="card submitted">
-    <div class="label">已提测</div>
-    <div class="value">15</div>
-  </div>
-  <div class="card testing">
-    <div class="label">测试中</div>
-    <div class="value">5</div>
-  </div>
-  <div class="card suspended">
-    <div class="label">挂起</div>
-    <div class="value">4</div>
-  </div>
+<div class="cards" id="cards">
+  <div class="card card-total"><div class="num">27</div><div class="label">📋 合计</div></div>
+  <div class="card card-new"><div class="num">0</div><div class="label">🆕 新</div></div>
+  <div class="card card-cancelled"><div class="num">0</div><div class="label">🚫 设计取消</div></div>
+  <div class="card card-submitted"><div class="num">27</div><div class="label">✅ 已提测</div></div>
+  <div class="card card-testing"><div class="num">0</div><div class="label">🔬 测试中</div></div>
+  <div class="card card-suspended"><div class="num">0</div><div class="label">⏸ 挂起</div></div>
 </div>
 
-<!-- Overview Table -->
-<div class="section-title">
-  人员排期总览
-  <span class="badge">14/14 人有任务</span>
-</div>
 <div class="table-wrap">
   <table>
     <thead>
       <tr>
         <th>开发人员</th>
-        <th style="text-align:center">合计</th>
-        <th style="text-align:center">新</th>
-        <th style="text-align:center">设计取消</th>
-        <th style="text-align:center">已提测</th>
-        <th style="text-align:center">测试中</th>
-        <th style="text-align:center">挂起</th>
+        <th>合计</th>
+        <th>新</th>
+        <th>设计取消</th>
+        <th>已提测</th>
+        <th>测试中</th>
+        <th>挂起</th>
       </tr>
     </thead>
-    <tbody>
-      <tr class="row-hot">
-        <td><strong>🔴 张秋涵</strong></td>
-        <td style="text-align:center"><strong>22</strong></td>
-        <td style="text-align:center">17</td>
-        <td style="text-align:center">2</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">2</td>
-      </tr>
-      <tr class="row-hot">
-        <td><strong>🔴 张海志</strong></td>
-        <td style="text-align:center"><strong>16</strong></td>
-        <td style="text-align:center">8</td>
-        <td style="text-align:center">4</td>
-        <td style="text-align:center">4</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr class="row-hot">
-        <td><strong>🔴 张家像</strong></td>
-        <td style="text-align:center"><strong>15</strong></td>
-        <td style="text-align:center">11</td>
-        <td style="text-align:center">2</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">1</td>
-      </tr>
-      <tr class="row-hot">
-        <td><strong>🔴 周旋之</strong></td>
-        <td style="text-align:center"><strong>10</strong></td>
-        <td style="text-align:center">7</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr class="row-hot">
-        <td><strong>🔴 欧阳福辉</strong></td>
-        <td style="text-align:center"><strong>10</strong></td>
-        <td style="text-align:center">5</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">2</td>
-        <td style="text-align:center">2</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr class="row-warm">
-        <td><strong>🟡 吴淦淦</strong></td>
-        <td style="text-align:center"><strong>8</strong></td>
-        <td style="text-align:center">7</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">1</td>
-      </tr>
-      <tr class="row-warm">
-        <td><strong>🟡 李研锋</strong></td>
-        <td style="text-align:center"><strong>7</strong></td>
-        <td style="text-align:center">3</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">2</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr>
-        <td><strong>吕昕远</strong></td>
-        <td style="text-align:center"><strong>6</strong></td>
-        <td style="text-align:center">6</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr>
-        <td><strong>杨钦</strong></td>
-        <td style="text-align:center"><strong>5</strong></td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">2</td>
-        <td style="text-align:center">3</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr>
-        <td><strong>李子涵</strong></td>
-        <td style="text-align:center"><strong>4</strong></td>
-        <td style="text-align:center">2</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr>
-        <td><strong>刘政豪</strong></td>
-        <td style="text-align:center"><strong>4</strong></td>
-        <td style="text-align:center">4</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr>
-        <td><strong>刘鹏鸣</strong></td>
-        <td style="text-align:center"><strong>3</strong></td>
-        <td style="text-align:center">3</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr>
-        <td><strong>夏绍昌</strong></td>
-        <td style="text-align:center"><strong>2</strong></td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-      </tr>
-      <tr>
-        <td><strong>卢谦</strong></td>
-        <td style="text-align:center"><strong>1</strong></td>
-        <td style="text-align:center">1</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-        <td style="text-align:center">0</td>
-      </tr>
+    <tbody id="summaryBody">
     </tbody>
   </table>
 </div>
-
-<!-- Detail Accordion -->
-<div class="section-title">
-  需求明细
-  <span class="badge" id="filtered-count"></span>
+<div style="font-size:12px;color:#6b7280;margin-top:-12px;margin-bottom:8px;padding-left:4px;">
+  无活跃需求：（无）
 </div>
 
 <div class="toolbar">
-  <input type="text" class="search-input" id="search" placeholder="搜索需求标题..." oninput="filterAll()">
-  <button class="filter-btn active" data-status="新" onclick="toggleFilter(this)">新</button>
-  <button class="filter-btn active" data-status="设计取消" onclick="toggleFilter(this)">设计取消</button>
-  <button class="filter-btn active" data-status="已提测" onclick="toggleFilter(this)">已提测</button>
-  <button class="filter-btn active" data-status="测试中" onclick="toggleFilter(this)">测试中</button>
-  <button class="filter-btn active" data-status="挂起" onclick="toggleFilter(this)">挂起</button>
-  <button class="filter-btn" style="font-size:11px" onclick="expandAll()">展开全部</button>
-  <button class="filter-btn" style="font-size:11px" onclick="collapseAll()">折叠全部</button>
+  <input type="text" id="search" placeholder="🔍 搜索需求标题..." oninput="filterAll()"/>
+  <div class="filter-btns" id="filterBtns">
+    <button class="fbtn active" onclick="toggleFilter(this,'all')">全部</button>
+    <button class="fbtn" onclick="toggleFilter(this,'新')" style="border-color:#FF6770;color:#FF6770;">新</button>
+    <button class="fbtn" onclick="toggleFilter(this,'设计取消')" style="border-color:#FAA23B;color:#FAA23B;">设计取消</button>
+    <button class="fbtn" onclick="toggleFilter(this,'已提测')" style="border-color:#70B400;color:#70B400;">已提测</button>
+    <button class="fbtn" onclick="toggleFilter(this,'测试中')" style="border-color:#0D68FF;color:#0D68FF;">测试中</button>
+    <button class="fbtn" onclick="toggleFilter(this,'挂起')" style="border-color:#9CA3AF;color:#9CA3AF;">挂起</button>
+  </div>
+  <button class="toggle-all" onclick="toggleAll()">📂 展开全部</button>
 </div>
 
-<div class="accordion" id="accordion">
-  <div class="accordion-group" data-person="张秋涵">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">张秋涵</span>
-      <span style="color:#8b949e;font-size:12px">22条</span>
-      <span class="stats"><span class="stat-item highlight">新17</span><span class="stat-item">设计取消2</span><span class="stat-item">已提测1</span><span class="stat-item">挂起2</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">1</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196534" target="_blank">【测试】【Bug转需求】【时装】白泽裙子上特效乱闪</a></td>
-            <td style="color:#8b949e;font-size:11px">张秋涵、王佳慧、田素垒、穆保锦、管乐怡</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-07</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">2</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196996" target="_blank">【测试】【S4】打坐技能皮肤功能 - 程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张秋涵、王佳慧、穆保锦、郭冠豪</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-13</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">3</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196991" target="_blank">【测试】【S4】打坐技能皮肤功能 - 策划配置</a></td>
-            <td style="color:#8b949e;font-size:11px">张秋涵、王佳慧、穆保锦、郭冠豪</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-13</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">4</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196971" target="_blank">【测试】【S4】八月战令&冲销外观需求 - 发型</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-13</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">5</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196961" target="_blank">【测试】【S4】八月战令&冲销外观需求 - 挂件</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-13</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">6</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197176" target="_blank">【测试】时装收藏功能优化</a></td>
-            <td style="color:#8b949e;font-size:11px">张秋涵、戴路、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-15</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">7</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197496" target="_blank">【测试】【S4】优化穿着不可应用外观时的界面提示 - 程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">王佳慧、王鹏越、游双、张秋涵</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-16</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">8</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197459" target="_blank">【测试】【S4】10月战令&冲销外观需求 - 挂件</a></td>
-            <td style="color:#8b949e;font-size:11px">王鹏越、张爱思、王佳慧、张秋涵</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-16</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">9</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197447" target="_blank">【测试】【S4】10月战令&冲销外观需求 - 发型</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-16</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">10</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198070" target="_blank">【测试】【S4】10月战令&冲销外观需求 - 图标需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张义文、张海志、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">11</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198066" target="_blank">【测试】【S4】八月战令&冲销外观需求 - 图标需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张义文、张海志、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">12</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198276" target="_blank">【测试】【S4】 - 直售时装 - 2026/08 - DIY外卖服 - 美术资产中可导出刺绣</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-23</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">13</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198264" target="_blank">【测试】【S4】 - 直售时装 - 2026/08 - DIY外卖服 - 绣片设计</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-23</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">14</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198332" target="_blank">【测试】【S4】七夕时装售卖活动</a></td>
-            <td style="color:#8b949e;font-size:11px">张秋涵、游双、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-24</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">15</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198466" target="_blank">【测试】【S4】 - 直售时装 - 2026/08 - DIY外卖服 - 引擎需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张秋涵、王佳慧、王鹏越、田素垒</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-27</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">16</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198643" target="_blank">【测试】【S5】角色默认体型修改</a></td>
-            <td style="color:#8b949e;font-size:11px">张秋涵、王佳慧、王鹏越、田素垒</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">17</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198639" target="_blank">【测试】【S5】角色默认体型修改 - 美术需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">18</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001146497" target="_blank">【测试】新增一批可染色挂件</a></td>
-            <td style="color:#8b949e;font-size:11px">方盛元、王佳慧、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-03-18</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">19</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001167052" target="_blank">【测试】【商城】限时库存功能 - 程序需求 - 限时库存支持热加载</a></td>
-            <td style="color:#8b949e;font-size:11px">胡贺然、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-09-03</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">20</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198561" target="_blank">【测试】发布时间[2026-08-05]-时装（衣服、头发、披风、挂件、特效、成就、时装单品或套装赠品、时装活动板、商城宣传图）</a></td>
-            <td style="color:#8b949e;font-size:11px">张秋涵、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="挂起">
-            <td style="text-align:center;color:#484f56">21</td>
-            <td style="text-align:center"><span class="tag tag-suspended">挂起</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001167050" target="_blank">【测试】中央服支持热加载</a></td>
-            <td style="color:#8b949e;font-size:11px">姜骅洋、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-09-03</td>
-          </tr>
-          <tr data-status="挂起">
-            <td style="text-align:center;color:#484f56">22</td>
-            <td style="text-align:center"><span class="tag tag-suspended">挂起</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001181623" target="_blank">【测试】【装扮站】装扮站升级 - 下载与预览 - 程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">穆保锦、王佳慧</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-02-25</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="张海志">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">张海志</span>
-      <span style="color:#8b949e;font-size:12px">16条</span>
-      <span class="stats"><span class="stat-item">新8</span><span class="stat-item">设计取消4</span><span class="stat-item">已提测4</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">23</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196965" target="_blank">【测试】【S4】八月战令&冲销外观需求 - 头像、头像框</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、王佳慧、王鹏越、张海志</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-13</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">24</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197451" target="_blank">【测试】【S4】10月战令&冲销外观需求 - 头像、头像框</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、王佳慧、王鹏越、张义文、张海志</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-16</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">25</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198070" target="_blank">【测试】【S4】10月战令&冲销外观需求 - 图标需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张义文、张海志、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">26</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198066" target="_blank">【测试】【S4】八月战令&冲销外观需求 - 图标需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张义文、张海志、张秋涵、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">27</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198059" target="_blank">【测试】【S4】七夕时装售卖活动 - 图标需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张义文、张海志、张爱思、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">28</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198055" target="_blank">【测试】【S4】七夕时装售卖活动 - 赠品需求 - 情侣头像</a></td>
-            <td style="color:#8b949e;font-size:11px">张海志、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">29</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198051" target="_blank">【测试】【S4】七夕时装售卖活动 - 赠品需求 - 情侣称号</a></td>
-            <td style="color:#8b949e;font-size:11px">张义文、张海志、张爱思、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">30</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198043" target="_blank">【测试】【S4】七夕时装售卖活动 - 赠品需求 - 个人主页摆件</a></td>
-            <td style="color:#8b949e;font-size:11px">张海志、张爱思、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">31</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001149262" target="_blank">【测试】港澳台版本开发-师徒系统开启时间修改</a></td>
-            <td style="color:#8b949e;font-size:11px">韩少华、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-04-11</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">32</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001149261" target="_blank">【测试】港澳台版本开发-师徒任务完成条件修改</a></td>
-            <td style="color:#8b949e;font-size:11px">韩少华、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-04-11</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">33</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001149260" target="_blank">【测试】港澳台版本开发-师徒buff生效副本修改</a></td>
-            <td style="color:#8b949e;font-size:11px">韩少华、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-04-11</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">34</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001149259" target="_blank">【测试】港澳台版本开发-师徒商店内容修改</a></td>
-            <td style="color:#8b949e;font-size:11px">韩少华、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-04-11</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">35</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001194962" target="_blank">【测试】dlc03新赛季名望-图形称号</a></td>
-            <td style="color:#8b949e;font-size:11px">张义文、张海志、徐克寒、穆保锦、范慕寒</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-06-20</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">36</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198572" target="_blank">【测试】发布时间[2026-08-05]-鬼王技改</a></td>
-            <td style="color:#8b949e;font-size:11px">张海志、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">37</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198569" target="_blank">【测试】发布时间[2026-08-05]-焚香技改</a></td>
-            <td style="color:#8b949e;font-size:11px">张海志、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">38</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198565" target="_blank">【测试】发布时间[2026-08-05]-击杀特效、UI外观（头像、头像框、名片皮肤、个人主页贴纸）</a></td>
-            <td style="color:#8b949e;font-size:11px">张海志、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="张家像">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">张家像</span>
-      <span style="color:#8b949e;font-size:12px">15条</span>
-      <span class="stats"><span class="stat-item highlight">新11</span><span class="stat-item">设计取消2</span><span class="stat-item">已提测1</span><span class="stat-item">挂起1</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">39</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001182277" target="_blank">【测试】技能试炼场优化-S4迭代-程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张家像、游双、祖钊霖、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-03-05</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">40</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001195216" target="_blank">【测试】新增副本类型-活动副本</a></td>
-            <td style="color:#8b949e;font-size:11px">王鹏越、杨家鸣、林硕、游双、王华卓、王延鹏、赵艳松、张家像</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-06-25</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">41</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197768" target="_blank">【测试】S4-高难本玩家增益buff配置4</a></td>
-            <td style="color:#8b949e;font-size:11px">傅佳、张家像、王华卓、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-20</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">42</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197766" target="_blank">【测试】S4-高难本玩家增益buff配置3</a></td>
-            <td style="color:#8b949e;font-size:11px">傅佳、张家像、王华卓、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-20</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">43</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197764" target="_blank">【测试】S4-高难本玩家增益buff配置2</a></td>
-            <td style="color:#8b949e;font-size:11px">傅佳、张家像、王华卓、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-20</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">44</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197782" target="_blank">【测试】大型五人本-青云剑冢-特定模型可配置不显示水面倒影 优化需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张家像、杨立秋、王鹏越、田素垒</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">45</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198164" target="_blank">【测试】幽姬团队副本-关卡制作-boss时间轴整理-普通难度</a></td>
-            <td style="color:#8b949e;font-size:11px">张家像、王华卓、王鹏越、葛益昕</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-22</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">46</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198549" target="_blank">【测试】260819数值内容-幽姬动态&困难数值配置</a></td>
-            <td style="color:#8b949e;font-size:11px">张家像、徐克寒、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">47</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198541" target="_blank">【测试】260812数值内容-幽姬普通数值配置</a></td>
-            <td style="color:#8b949e;font-size:11px">张家像、徐克寒、王鹏越、黄振宇</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">48</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198533" target="_blank">【测试】260805数值内容-大秘境开放新层数数值配置</a></td>
-            <td style="color:#8b949e;font-size:11px">张家像、徐克寒、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">49</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198625" target="_blank">【测试】大秘境玩法-词缀轮换修改&低保层数提高</a></td>
-            <td style="color:#8b949e;font-size:11px">王鹏越、王华卓、张家像</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">50</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001191136" target="_blank">【测试】S4-五人副本-单人秘境模式 - 引导任务</a></td>
-            <td style="color:#8b949e;font-size:11px">杨立秋、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-05-06</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">51</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001191445" target="_blank">【测试】S4-五人副本-单人秘境模式-程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">杨立秋、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-05-11</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">52</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198566" target="_blank">【测试】发布时间[2026-08-05]-找徐少青确认是否有新的副本线路可提测</a></td>
-            <td style="color:#8b949e;font-size:11px">张家像、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="挂起">
-            <td style="text-align:center;color:#484f56">53</td>
-            <td style="text-align:center"><span class="tag tag-suspended">挂起</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001175345" target="_blank">【测试】大秘境玩法-副本生涯相关</a></td>
-            <td style="color:#8b949e;font-size:11px">李孟楠、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-11-26</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="周旋之">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">周旋之</span>
-      <span style="color:#8b949e;font-size:12px">10条</span>
-      <span class="stats"><span class="stat-item">新7</span><span class="stat-item">设计取消1</span><span class="stat-item">已提测1</span><span class="stat-item">测试中1</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">54</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196957" target="_blank">【测试】【S4】八月战令&冲销外观需求 - 飞剑</a></td>
-            <td style="color:#8b949e;font-size:11px">王佳慧、王鹏越、周旋之</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-13</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">55</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197455" target="_blank">【测试】【S4】10月战令&冲销外观需求 - 飞剑</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、王佳慧、王鹏越、张爱思</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-16</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">56</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197965" target="_blank">【测试】七夕活动-纤云弄巧（割草刷怪）玩法优化-数值</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、张皓天、徐克寒、王鹏越、范慕寒、邓京晶</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">57</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197953" target="_blank">【测试】七夕活动-纤云弄巧（割草刷怪）玩法优化-程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、张皓天、游双、王鹏越、田相龙、范慕寒、赵艳松、邓京晶</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">58</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198271" target="_blank">【测试】百花劫煞优化-碧瑶战斗设计与制作</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、张皓天、王鹏越、邓京晶、郭冠豪</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-23</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">59</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198483" target="_blank">【测试】孔明灯多人效果开销优化</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、徐杰、王鹏越、祁喆</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-27</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">60</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198689" target="_blank">【测试】百花劫煞优化-程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、张皓天、游双、王鹏越、邓京晶</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-30</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">61</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001190591" target="_blank">【测试】S4版本数值内容开发-代币周清理功能</a></td>
-            <td style="color:#8b949e;font-size:11px">穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-04-22</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">62</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198563" target="_blank">【测试】发布时间[2026-08-05]-载具（飞剑、坐骑）</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="测试中">
-            <td style="text-align:center;color:#484f56">63</td>
-            <td style="text-align:center"><span class="tag tag-testing">测试中</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197121" target="_blank">【测试】在win7电脑上安装launcher并下载和安装游戏</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、李子涵、田素垒、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-15</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="欧阳福辉">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">欧阳福辉</span>
-      <span style="color:#8b949e;font-size:12px">10条</span>
-      <span class="stats"><span class="stat-item">新5</span><span class="stat-item">设计取消1</span><span class="stat-item">已提测2</span><span class="stat-item">测试中2</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">64</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197041" target="_blank">【测试】【S4】八月战令&冲销外观需求 - 休闲动作</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、欧阳福辉、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-14</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">65</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197443" target="_blank">【测试】【S4】10月战令&冲销外观需求 - 休闲动作</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、王佳慧、王鹏越、欧阳福辉</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-16</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">66</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198047" target="_blank">【测试】【S4】七夕时装售卖活动 - 赠品需求 - 双人动作依偎</a></td>
-            <td style="color:#8b949e;font-size:11px">张爱思、欧阳福辉、王佳慧、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">67</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198113" target="_blank">【测试】合并后导出地图信息</a></td>
-            <td style="color:#8b949e;font-size:11px">欧阳福辉、王鹏越、赵艳松</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-22</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">68</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198217" target="_blank">【测试】【优化】跨世界导航功能恢复-劫烬青云山麓需要增加出口npc配置</a></td>
-            <td style="color:#8b949e;font-size:11px">欧阳福辉、王鹏越、祁喆、范慕寒</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-23</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">69</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198623" target="_blank">【测试】表情包配置功能优化</a></td>
-            <td style="color:#8b949e;font-size:11px">祁喆、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">70</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198567" target="_blank">【测试】发布时间[2026-08-05]-UI外观（图形称号）</a></td>
-            <td style="color:#8b949e;font-size:11px">欧阳福辉、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">71</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198564" target="_blank">【测试】发布时间[2026-08-05]-休闲（休闲动作、置景动作）</a></td>
-            <td style="color:#8b949e;font-size:11px">欧阳福辉、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="测试中">
-            <td style="text-align:center;color:#484f56">72</td>
-            <td style="text-align:center"><span class="tag tag-testing">测试中</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196715" target="_blank">【测试】幽姬团队副本-场景需求</a></td>
-            <td style="color:#8b949e;font-size:11px">欧阳福辉、王华卓、田素垒、穆保锦、艾美、葛益昕</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-09</td>
-          </tr>
-          <tr data-status="测试中">
-            <td style="text-align:center;color:#484f56">73</td>
-            <td style="text-align:center"><span class="tag tag-testing">测试中</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197378" target="_blank">【测试】【优化】跨世界导航功能恢复</a></td>
-            <td style="color:#8b949e;font-size:11px">欧阳福辉、祁喆、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-16</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="吴淦淦">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">吴淦淦</span>
-      <span style="color:#8b949e;font-size:12px">8条</span>
-      <span class="stats"><span class="stat-item">新7</span><span class="stat-item">挂起1</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">74</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001194969" target="_blank">【测试】【S4赛季（dlc03）】- 神兵（橙武）   - 星河 - 二阶段任务 </a></td>
-            <td style="color:#8b949e;font-size:11px">吴淦淦、徐克寒、王鹏越、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-06-21</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">75</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197067" target="_blank">【测试】【S4赛季（0819版本）】七夕活动 - 任务 - 制作</a></td>
-            <td style="color:#8b949e;font-size:11px">吴淦淦、徐杰、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-14</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">76</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197716" target="_blank">【测试】追踪任务规则调整需求</a></td>
-            <td style="color:#8b949e;font-size:11px">王鹏越、徐杰、吴淦淦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-20</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">77</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197698" target="_blank">【测试】任务逻辑细节优化 - 任务增加快捷使用技能/物品的功能需求</a></td>
-            <td style="color:#8b949e;font-size:11px">王鹏越、徐杰、吴淦淦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-20</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">78</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197675" target="_blank">【测试】天玺百炼玩法优化-程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">吴淦淦、张拯、游双、王鹏越、田相龙、范慕寒</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-20</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">79</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198476" target="_blank">【测试】【S4赛季（0819版本）】七夕活动 - 活动界面逻辑优化</a></td>
-            <td style="color:#8b949e;font-size:11px">吴淦淦、游双、王鹏越、田相龙、范慕寒、邓京晶</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-27</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">80</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198606" target="_blank">【测试】下次周更前留一个新版本客户端停留在服务器选择界面</a></td>
-            <td style="color:#8b949e;font-size:11px">吴淦淦、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="挂起">
-            <td style="text-align:center;color:#484f56">81</td>
-            <td style="text-align:center"><span class="tag tag-suspended">挂起</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001172665" target="_blank">【测试】接入timetool.dll/timetool.so</a></td>
-            <td style="color:#8b949e;font-size:11px">吴淦淦、田相龙、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2025-10-31</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="李研锋">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">李研锋</span>
-      <span style="color:#8b949e;font-size:12px">7条</span>
-      <span class="stats"><span class="stat-item">新3</span><span class="stat-item">设计取消1</span><span class="stat-item">已提测2</span><span class="stat-item">测试中1</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">82</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198162" target="_blank">【测试】【DLC3.5】七脉会武玩法——程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">李研锋、游双、王鹏越、赵艳松、郭冠豪</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-22</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">83</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198503" target="_blank">【测试】优化天工机巧盘Widget相关性能</a></td>
-            <td style="color:#8b949e;font-size:11px">李研锋、王鹏越、田相龙、田素垒</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">84</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198665" target="_blank">【测试】天工引导活动-逻辑优化</a></td>
-            <td style="color:#8b949e;font-size:11px">徐克寒、李研锋、游双、王延鹏、王鹏越、田相龙、范慕寒、邓京晶</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-30</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">85</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001194729" target="_blank">【测试】天工机巧盘系统引导任务</a></td>
-            <td style="color:#8b949e;font-size:11px">范慕寒、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-06-17</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">86</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198571" target="_blank">【测试】发布时间[2026-08-05]-青云技改</a></td>
-            <td style="color:#8b949e;font-size:11px">李研锋、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">87</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198570" target="_blank">【测试】发布时间[2026-08-05]-天音技改</a></td>
-            <td style="color:#8b949e;font-size:11px">李研锋、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="测试中">
-            <td style="text-align:center;color:#484f56">88</td>
-            <td style="text-align:center"><span class="tag tag-testing">测试中</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196259" target="_blank">【测试】合服功能-账号仓库合服逻辑处理</a></td>
-            <td style="color:#8b949e;font-size:11px">穆保锦、李研锋、徐克寒、徐少青、游双</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-03</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="吕昕远">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">吕昕远</span>
-      <span style="color:#8b949e;font-size:12px">6条</span>
-      <span class="stats"><span class="stat-item">新6</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">89</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196967" target="_blank">【测试】【S4】八月战令&冲销外观需求 - 策划配置</a></td>
-            <td style="color:#8b949e;font-size:11px">王佳慧、王鹏越、吕昕远</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-13</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">90</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197461" target="_blank">【测试】【S4】10月战令&冲销外观需求 - 策划配置</a></td>
-            <td style="color:#8b949e;font-size:11px">吕昕远、王鹏越、王佳慧</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-16</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">91</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198551" target="_blank">【测试】260819数值内容-幽姬动态&困难星历&宝库配置</a></td>
-            <td style="color:#8b949e;font-size:11px">吕昕远、徐克寒、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">92</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198547" target="_blank">【测试】260819数值内容-消费返利配置</a></td>
-            <td style="color:#8b949e;font-size:11px">吕昕远、徐克寒、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">93</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198545" target="_blank">【测试】260819数值内容-战令配置</a></td>
-            <td style="color:#8b949e;font-size:11px">吕昕远、徐克寒、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">94</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198543" target="_blank">【测试】260812数值内容-幽姬普通星历&宝库配置</a></td>
-            <td style="color:#8b949e;font-size:11px">徐克寒、吕昕远、王莹、王鹏越、黄振宇</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="杨钦">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">杨钦</span>
-      <span style="color:#8b949e;font-size:12px">5条</span>
-      <span class="stats"><span class="stat-item">设计取消2</span><span class="stat-item">已提测3</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">95</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001190324" target="_blank">【测试】S4版本数值内容开发-单人秘境宠物战斗玩法程序功能-屏蔽测试</a></td>
-            <td style="color:#8b949e;font-size:11px">徐克寒、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-04-21</td>
-          </tr>
-          <tr data-status="设计取消">
-            <td style="text-align:center;color:#484f56">96</td>
-            <td style="text-align:center"><span class="tag tag-cancelled">设计取消</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001191303" target="_blank">【测试】S4版本数值内容开发-单人秘境宠物战斗玩法开发-战斗技能配置-屏蔽测试</a></td>
-            <td style="color:#8b949e;font-size:11px">徐克寒、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-05-08</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">97</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198195" target="_blank">【测试】水麒麟副本困难优化测试</a></td>
-            <td style="color:#8b949e;font-size:11px">杨钦、李孟楠、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-23</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">98</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198568" target="_blank">【测试】发布时间[2026-08-05]-华裳之轮（盲盒抽奖）功能、女娲石商店、盲盒活动板</a></td>
-            <td style="color:#8b949e;font-size:11px">杨钦、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">99</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198562" target="_blank">【测试】发布时间[2026-08-05]-武器皮肤、技能皮肤</a></td>
-            <td style="color:#8b949e;font-size:11px">杨钦、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="李子涵">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">李子涵</span>
-      <span style="color:#8b949e;font-size:12px">4条</span>
-      <span class="stats"><span class="stat-item">新2</span><span class="stat-item">测试中1</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">100</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001196502" target="_blank">【测试】七夕活动-碧瑶主题曲</a></td>
-            <td style="color:#8b949e;font-size:11px">刘翼凡、戴路、李子涵、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-07</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">101</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198597" target="_blank">【测试】中秋国庆活动-程序需求</a></td>
-            <td style="color:#8b949e;font-size:11px">张皓天、李子涵、游双、王鹏越、范慕寒、邓京晶</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-          <tr data-status="测试中">
-            <td style="text-align:center;color:#484f56">102</td>
-            <td style="text-align:center"><span class="tag tag-testing">测试中</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197121" target="_blank">【测试】在win7电脑上安装launcher并下载和安装游戏</a></td>
-            <td style="color:#8b949e;font-size:11px">周旋之、李子涵、田素垒、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-15</td>
-          </tr>
-          <tr data-status="status_18">
-            <td style="text-align:center;color:#484f56">103</td>
-            <td style="text-align:center"><span class="tag ">status_18</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198196" target="_blank">【测试】水麒麟副本困难优化测试</a></td>
-            <td style="color:#8b949e;font-size:11px">杨钦、李孟楠、王鹏越、李子涵</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-23</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="刘政豪">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">刘政豪</span>
-      <span style="color:#8b949e;font-size:12px">4条</span>
-      <span class="stats"><span class="stat-item">新4</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">104</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197667" target="_blank">【测试】变强引导系统</a></td>
-            <td style="color:#8b949e;font-size:11px">王鹏越、刘政豪、祁喆</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-20</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">105</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198373" target="_blank">【测试】烽行险道玩法禁止判定为同步器的角色参与</a></td>
-            <td style="color:#8b949e;font-size:11px">刘政豪、张拯、游双、王鹏越、范慕寒、邓京晶</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-27</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">106</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198553" target="_blank">【测试】260819数值内容-世界等级数值配置</a></td>
-            <td style="color:#8b949e;font-size:11px">刘政豪、徐克寒、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">107</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198537" target="_blank">【测试】260805数值内容-世界等级掉落配置</a></td>
-            <td style="color:#8b949e;font-size:11px">刘政豪、徐克寒、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="刘鹏鸣">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">刘鹏鸣</span>
-      <span style="color:#8b949e;font-size:12px">3条</span>
-      <span class="stats"><span class="stat-item">新3</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">108</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197127" target="_blank">【测试】【S4】单人挂机玩法-增加团本怪物-数值</a></td>
-            <td style="color:#8b949e;font-size:11px">刘鹏鸣、张皓天、徐克寒、穆保锦、范慕寒</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-15</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">109</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197125" target="_blank">【测试】【S4】单人挂机玩法-增加团本怪物</a></td>
-            <td style="color:#8b949e;font-size:11px">刘鹏鸣、张皓天、徐克寒、穆保锦、范慕寒、郭冠豪</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-15</td>
-          </tr>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">110</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198535" target="_blank">【测试】260805数值内容-炼器开放+10配置</a></td>
-            <td style="color:#8b949e;font-size:11px">刘鹏鸣、徐克寒、王鹏越</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-28</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="夏绍昌">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">夏绍昌</span>
-      <span style="color:#8b949e;font-size:12px">2条</span>
-      <span class="stats"><span class="stat-item">新1</span><span class="stat-item">已提测1</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">111</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198266" target="_blank">【测试】【S4赛季（dlc03）】- 神兵（橙武）   - 星河-效果设计及配置</a></td>
-            <td style="color:#8b949e;font-size:11px">夏绍昌、徐克寒、王鹏越、郭冠豪</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-23</td>
-          </tr>
-          <tr data-status="已提测">
-            <td style="text-align:center;color:#484f56">112</td>
-            <td style="text-align:center"><span class="tag tag-submitted">已提测</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001198573" target="_blank">【测试】发布时间[2026-08-05]-合欢、灵汐技改，战斗法宝修改</a></td>
-            <td style="color:#8b949e;font-size:11px">夏绍昌、穆保锦、穆保锦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-29</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <div class="accordion-group" data-person="卢谦">
-    <div class="accordion-header" onclick="toggleAccordion(this)">
-      <span class="arrow">▶</span>
-      <span class="person-name">卢谦</span>
-      <span style="color:#8b949e;font-size:12px">1条</span>
-      <span class="stats"><span class="stat-item">新1</span></span>
-    </div>
-    <div class="accordion-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:50px;text-align:center">序号</th>
-            <th style="width:80px;text-align:center">状态</th>
-            <th>需求标题</th>
-            <th style="width:130px">处理人</th>
-            <th style="width:95px;text-align:center">创建时间</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr data-status="新">
-            <td style="text-align:center;color:#484f56">113</td>
-            <td style="text-align:center"><span class="tag tag-new">新</span></td>
-            <td><a href="https://www.tapd.cn/21711231/prong/stories/view/1121711231001197525" target="_blank">【测试】一键宏优化——程序功能</a></td>
-            <td style="color:#8b949e;font-size:11px">戴路、王鹏越、郭冠豪、游双、赵艳松、卢谦</td>
-            <td style="text-align:center;color:#484f56;font-size:11px">2026-07-17</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+<div class="accordion" id="accordion"></div>
+<div class="no-results hidden" id="noResults">😕 无匹配结果</div>
 
 <div class="footer">
-  数据来源：TAPD · 诛仙世界 · 项目测试
-</div>
-
+  数据来源：TAPD API · 诛仙世界 workspace 21711231 · 自动更新于每周一 12:00
 </div>
 
 <script>
-// Status filters state
-let activeFilters = { '新': true, '设计取消': true, '已提测': true, '测试中': true, '挂起': true };
+const DATA = [{"name": "张海志", "total": 4, "stats": {"新": 0, "设计取消": 0, "已提测": 4, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "张海志;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198882"}, {"title": "【测试】发布时间[2026-08-05]-鬼王技改", "status": "已提测", "status_raw": "status_11", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198572"}, {"title": "【测试】发布时间[2026-08-05]-焚香技改", "status": "已提测", "status_raw": "status_11", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198569"}, {"title": "【测试】发布时间[2026-08-05]-击杀特效、UI外观（头像、头像框、名片皮肤、个人主页贴纸）", "status": "已提测", "status_raw": "status_11", "owner": "张海志;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198565"}]}, {"name": "李研锋", "total": 3, "stats": {"新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "李研锋;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198885"}, {"title": "【测试】发布时间[2026-08-05]-青云技改", "status": "已提测", "status_raw": "status_11", "owner": "李研锋;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198571"}, {"title": "【测试】发布时间[2026-08-05]-天音技改", "status": "已提测", "status_raw": "status_11", "owner": "李研锋;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198570"}]}, {"name": "杨钦", "total": 3, "stats": {"新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "杨钦;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198886"}, {"title": "【测试】发布时间[2026-08-05]-华裳之轮（盲盒抽奖）功能、女娲石商店、盲盒活动板", "status": "已提测", "status_raw": "status_11", "owner": "杨钦;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198568"}, {"title": "【测试】发布时间[2026-08-05]-武器皮肤、技能皮肤", "status": "已提测", "status_raw": "status_11", "owner": "杨钦;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198562"}]}, {"name": "欧阳福辉", "total": 3, "stats": {"新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "欧阳福辉;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198887"}, {"title": "【测试】发布时间[2026-08-05]-UI外观（图形称号）", "status": "已提测", "status_raw": "status_11", "owner": "欧阳福辉;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198567"}, {"title": "【测试】发布时间[2026-08-05]-休闲（休闲动作、置景动作）", "status": "已提测", "status_raw": "status_11", "owner": "欧阳福辉;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198564"}]}, {"name": "周旋之", "total": 2, "stats": {"新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "周旋之;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198879"}, {"title": "【测试】发布时间[2026-08-05]-载具（飞剑、坐骑）", "status": "已提测", "status_raw": "status_11", "owner": "周旋之;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198563"}]}, {"name": "夏绍昌", "total": 2, "stats": {"新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "夏绍昌;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198880"}, {"title": "【测试】发布时间[2026-08-05]-合欢、灵汐技改，战斗法宝修改", "status": "已提测", "status_raw": "status_11", "owner": "夏绍昌;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198573"}]}, {"name": "张家像", "total": 2, "stats": {"新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "张家像;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198881"}, {"title": "【测试】发布时间[2026-08-05]-找徐少青确认是否有新的副本线路可提测", "status": "已提测", "status_raw": "status_11", "owner": "张家像;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198566"}]}, {"name": "张秋涵", "total": 2, "stats": {"新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "张秋涵;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198883"}, {"title": "【测试】发布时间[2026-08-05]-时装（衣服、头发、披风、挂件、特效、成就、时装单品或套装赠品、时装活动板、商城宣传图）", "status": "已提测", "status_raw": "status_11", "owner": "张秋涵;穆保锦;穆保锦;", "created": "2026-07-29", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198561"}]}, {"name": "刘政豪", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "刘政豪;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198874"}]}, {"name": "刘鹏鸣", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "刘鹏鸣;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198875"}]}, {"name": "卢谦", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "卢谦;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198876"}]}, {"name": "吕昕远", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "吕昕远;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198877"}]}, {"name": "吴淦淦", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "吴淦淦;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198878"}]}, {"name": "李子涵", "total": 1, "stats": {"新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, "items": [{"title": "【测试】【发布时间-2026-08-05】在release分支上验证所有关闭时间在7月27日到8月3日之间的BUG，并执行开服必测用例。", "status": "已提测", "status_raw": "status_11", "owner": "李子涵;穆保锦;", "created": "2026-08-03", "url": "https://www.tapd.cn/21711231/prong/stories/view/1121711231001198884"}]}];
+const SUMMARY = {"total": 27, "新": 0, "设计取消": 0, "已提测": 27, "测试中": 0, "挂起": 0};
+const DEVROWS = [{"name": "张海志", "total": 4, "新": 0, "设计取消": 0, "已提测": 4, "测试中": 0, "挂起": 0}, {"name": "李研锋", "total": 3, "新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, {"name": "杨钦", "total": 3, "新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, {"name": "欧阳福辉", "total": 3, "新": 0, "设计取消": 0, "已提测": 3, "测试中": 0, "挂起": 0}, {"name": "周旋之", "total": 2, "新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, {"name": "夏绍昌", "total": 2, "新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, {"name": "张家像", "total": 2, "新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, {"name": "张秋涵", "total": 2, "新": 0, "设计取消": 0, "已提测": 2, "测试中": 0, "挂起": 0}, {"name": "刘政豪", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "刘鹏鸣", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "卢谦", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "吕昕远", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "吴淦淦", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}, {"name": "李子涵", "total": 1, "新": 0, "设计取消": 0, "已提测": 1, "测试中": 0, "挂起": 0}];
+const INACTIVE = [];
 
-function toggleFilter(btn) {
-  const status = btn.dataset.status;
-  activeFilters[status] = !activeFilters[status];
-  btn.classList.toggle('off', !activeFilters[status]);
-  btn.classList.toggle('active', activeFilters[status]);
+const STATUS_ORDER = ['新','设计取消','已提测','测试中','挂起'];
+const TAG_CLASS = {'新':'tag-new','设计取消':'tag-cancelled','已提测':'tag-submitted','测试中':'tag-testing','挂起':'tag-suspended'};
+const BADGE_CLASS = {'新':'badge-new','设计取消':'badge-cancelled','已提测':'badge-submitted','测试中':'badge-testing','挂起':'badge-suspended'};
+
+let activeFilter = 'all';
+
+function renderSummary() {
+  const tbody = document.getElementById('summaryBody');
+  tbody.innerHTML = DEVROWS.map(d => {
+    let rowClass = '';
+    if (d.total >= 10) rowClass = 'row-hot';
+    else if (d.total >= 7) rowClass = 'row-warm';
+    const badges = STATUS_ORDER.map(st => {
+      const n = d[st] || 0;
+      if (n === 0) return '<td></td>';
+      return `<td><span class="badge ${BADGE_CLASS[st]}">${n}</span></td>`;
+    }).join('');
+    return `<tr class="${rowClass}">
+      <td><strong>${d.name}</strong></td>
+      <td><strong>${d.total}</strong></td>
+      ${badges}
+    </tr>`;
+  }).join('');
+}
+
+function renderAccordion() {
+  const container = document.getElementById('accordion');
+  const searchTerm = document.getElementById('search').value.toLowerCase();
+
+  let html = '';
+  DATA.forEach(group => {
+    const filtered = group.items.filter(item => {
+      const matchSearch = !searchTerm || item.title.toLowerCase().includes(searchTerm);
+      const matchStatus = activeFilter === 'all' || item.status === activeFilter;
+      return matchSearch && matchStatus;
+    });
+    if (filtered.length === 0 && activeFilter !== 'all') return;
+
+    const statBadges = STATUS_ORDER.map(st => {
+      const n = group.stats[st] || 0;
+      if (n === 0) return '';
+      return `<span class="badge ${BADGE_CLASS[st]}" style="font-size:11px;">${n}</span>`;
+    }).filter(Boolean).join('');
+
+    html += `<div class="acc-group" data-dev="${group.name}">
+      <div class="acc-header" onclick="toggleAccordion(this)">
+        <h3>${group.name}</h3>
+        <div class="acc-badges">${statBadges}</div>
+        <span class="acc-total">${group.total}条</span>
+        <span class="acc-arrow">▶</span>
+      </div>
+      <div class="acc-body">
+        ${filtered.map(item => `
+          <div class="acc-item">
+            <span class="st-tag ${TAG_CLASS[item.status]}">${item.status}</span>
+            <a class="st-link" href="${item.url}" target="_blank" title="${item.title.replace(/"/g,'&quot;')}">${item.title}</a>
+            <span class="st-meta">${item.created}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+  document.getElementById('noResults').classList.toggle('hidden', !!container.innerHTML.trim());
+}
+
+function toggleAccordion(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+function toggleFilter(btn, status) {
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = status;
   filterAll();
 }
 
 function filterAll() {
-  const query = document.getElementById('search').value.toLowerCase();
-  const groups = document.querySelectorAll('.accordion-group');
-  let totalVisible = 0;
-  
-  groups.forEach(group => {
-    const rows = group.querySelectorAll('tbody tr');
-    let groupVisible = 0;
-    
-    rows.forEach(row => {
-      const status = row.dataset.status;
-      const title = row.querySelector('a')?.textContent.toLowerCase() || '';
-      const matchStatus = activeFilters[status] !== false;
-      const matchSearch = !query || title.includes(query);
-      const visible = matchStatus && matchSearch;
-      row.style.display = visible ? '' : 'none';
-      if (visible) groupVisible++;
-    });
-    
-    group.style.display = groupVisible > 0 ? '' : 'none';
-    totalVisible += groupVisible;
-  });
-  
-  document.getElementById('filtered-count').textContent = totalVisible + ' 条可见';
+  renderAccordion();
 }
 
-function toggleAccordion(header) {
-  header.classList.toggle('open');
-  header.nextElementSibling.classList.toggle('open');
+function toggleAll() {
+  const groups = document.querySelectorAll('.acc-group');
+  const allOpen = Array.from(groups).every(g => g.classList.contains('open'));
+  groups.forEach(g => g.classList.toggle('open', !allOpen));
+  document.querySelector('.toggle-all').textContent = allOpen ? '📂 展开全部' : '📁 折叠全部';
 }
 
-function expandAll() {
-  document.querySelectorAll('.accordion-header').forEach(h => { h.classList.add('open'); });
-  document.querySelectorAll('.accordion-body').forEach(b => { b.classList.add('open'); });
-}
-
-function collapseAll() {
-  document.querySelectorAll('.accordion-header').forEach(h => { h.classList.remove('open'); });
-  document.querySelectorAll('.accordion-body').forEach(b => { b.classList.remove('open'); });
-}
-
-// Init
-document.getElementById('filtered-count').textContent = document.querySelectorAll('.accordion-body tbody tr').length + ' 条';
+// Initial render
+renderSummary();
+renderAccordion();
 </script>
 
 </body>
