@@ -112,7 +112,7 @@ tr.current td:first-child { border-left:3px solid #8b5cf6; }
       </div>
     </div>
 
-    <div class="footer">数据存储：Cloudflare KV · 每周一 00:00 自动轮换</div>
+    <div class="footer">数据存储：GitHub 仓库 · 每周一 00:00 自动轮换 · 每次操作自动保存</div>
   </div>
 </div>
 
@@ -160,8 +160,9 @@ async function loadSchedule() {
   try {
     const resp = await fetch('/api/duty');
     if (!resp.ok) throw new Error('加载失败: ' + resp.status);
-    const data = await resp.json();
-    scheduleData = data;
+    const result = await resp.json();
+    if (!result.ok) throw new Error(result.message || '数据加载失败');
+    scheduleData = result.data;  // API 返回 {ok, data:{people,start_date}}
     renderSchedule();
   } catch (e) {
     showMsg('加载失败: ' + e.message, true);
