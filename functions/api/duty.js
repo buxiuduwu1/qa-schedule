@@ -1,25 +1,21 @@
-// Cloudflare Pages Function: 值班排班数据 API
-// GET  /api/duty  -> 读取排班数据
-// POST /api/duty  -> 操作排班（swap/add/remove/reset）
-// 数据存 KV (DUTY_KV)，键名 "schedule"
+// Cloudflare Pages Function: 值班排班数据 API（GitHub 存储版）
+// GET  /api/duty  -> 读取排班数据（GitHub duty/data.json）
+// POST /api/duty  -> 操作排班（swap/add/remove/reset），写回 GitHub
+//
+// 数据存 GitHub 仓库 buxiuduwu1/qa-schedule 的 duty/data.json
+// 每次修改都会产生一个 commit，有完整版本历史
 
-const KEY = 'schedule';
+const OWNER = 'buxiuduwu1';
+const REPO = 'qa-schedule';
+const DATA_PATH = 'duty/data.json';
+const API_BASE = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${DATA_PATH}`;
+const RAW_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${DATA_PATH}`;
+
 const DEFAULT_DATA = {
-  people: ['张三', '李四', '王五', '赵六', '孙七'],
-  start_date: getThisMonday(),
+  people: ['吴淦淦', '李研锋', '张家像', '周旋之', '杨钦', '张海志'],
+  start_date: '2026-08-03',
   updated_at: new Date().toISOString(),
 };
-
-function getThisMonday() {
-  const now = new Date();
-  const day = now.getDay() || 7;
-  now.setDate(now.getDate() - day + 1);
-  now.setHours(0, 0, 0, 0);
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,24 +30,71 @@ function json(data, status = 200) {
   });
 }
 
+function makeHeaders(env) {
+  return {
+    'Authorization': `Bearer ${env.GH_PAT}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json',
+    'User-Agent': 'qa-schedule-duty-worker',
+  };
+}
+
+async function readData(env) {
+  // 先试 raw（快，无 rate limit 压力）
+  try {
+    const resp = await fetch(RAW_BASE, { headers: { 'User-Agent': 'qa-schedule-duty-worker' } });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.people && data.people.length > 0) return data;
+    }
+  } catch (e) { /* 继续尝试 API */ }
+
+  // raw 失败或数据为空，走 API 读取（能拿到 sha）
+  const resp = await fetch(API_BASE, { headers: makeHeaders(env) });
+  if (!resp.ok) throw new Error('GitHub 读取失败: ' + resp.status);
+  const meta = await resp.json();
+  const content = atob(meta.content.replace(/\n/g, ''));
+  const data = JSON.parse(content);
+  data._sha = meta.sha;
+  return data;
+}
+
+async function writeData(env, data) {
+  // 获取当前 sha
+  const getResp = await fetch(API_BASE, { headers: makeHeaders(env) });
+  if (!getResp.ok) throw new Error('GitHub 读取失败: ' + getResp.status);
+  const meta = await getResp.json();
+  const sha = meta.sha;
+
+  const body = {
+    message: '值班排班更新',
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
+    branch: 'main',
+    sha: sha,
+  };
+
+  const putResp = await fetch(API_BASE, {
+    method: 'PUT',
+    headers: makeHeaders(env),
+    body: JSON.stringify(body),
+  });
+  if (!putResp.ok) {
+    const err = await putResp.text();
+    throw new Error('GitHub 写入失败: ' + putResp.status + ' ' + err.slice(0, 200));
+  }
+  return putResp.json();
+}
+
 export async function onRequest(context) {
   if (context.request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const kv = context.env.DUTY_KV;
-  if (!kv) {
-    return json({ ok: false, message: 'KV 未绑定' }, 500);
-  }
-
   // GET：读取
   if (context.request.method === 'GET') {
     try {
-      let data = await kv.get(KEY, 'json');
-      if (!data || !data.people || data.people.length === 0) {
-        data = DEFAULT_DATA;
-        await kv.put(KEY, JSON.stringify(data));
-      }
+      const data = await readData(context.env);
+      delete data._sha;
       return json({ ok: true, data });
     } catch (e) {
       return json({ ok: false, message: '读取失败: ' + e.message }, 500);
@@ -64,10 +107,8 @@ export async function onRequest(context) {
       const body = await context.request.json();
       const action = body.action;
 
-      let data = await kv.get(KEY, 'json');
-      if (!data || !data.people) {
-        data = DEFAULT_DATA;
-      }
+      const data = await readData(context.env);
+      if (!data.people) data.people = DEFAULT_DATA.people;
       data.people = data.people.filter(p => p && p.trim());
 
       if (action === 'swap') {
@@ -91,13 +132,14 @@ export async function onRequest(context) {
       } else if (action === 'reset') {
         data.people = (body.people || DEFAULT_DATA.people).filter(p => p && p.trim());
         if (data.people.length === 0) return json({ ok: false, message: '人员不能为空' }, 400);
-        data.start_date = body.start_date || getThisMonday();
+        data.start_date = body.start_date || data.start_date || '2026-08-03';
       } else {
         return json({ ok: false, message: '未知操作: ' + action }, 400);
       }
 
       data.updated_at = new Date().toISOString();
-      await kv.put(KEY, JSON.stringify(data));
+      await writeData(context.env, data);
+      delete data._sha;
       return json({ ok: true, data });
     } catch (e) {
       return json({ ok: false, message: '操作失败: ' + e.message }, 500);
