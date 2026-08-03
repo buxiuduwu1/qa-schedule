@@ -40,16 +40,7 @@ function makeHeaders(env) {
 }
 
 async function readData(env) {
-  // 先试 raw（快，无 rate limit 压力）
-  try {
-    const resp = await fetch(RAW_BASE, { headers: { 'User-Agent': 'qa-schedule-duty-worker' } });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && data.people && data.people.length > 0) return data;
-    }
-  } catch (e) { /* 继续尝试 API */ }
-
-  // raw 失败或数据为空，走 API 读取（能拿到 sha）
+  // 直接走 GitHub API 读取（实时，拿到 sha），不用 raw（raw 有 CDN 缓存延迟）
   const resp = await fetch(API_BASE, { headers: makeHeaders(env) });
   if (!resp.ok) throw new Error('GitHub 读取失败: ' + resp.status);
   const meta = await resp.json();
