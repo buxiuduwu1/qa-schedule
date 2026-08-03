@@ -2,8 +2,9 @@
 """QA 排期看板刷新脚本 — 从 TAPD 拉取并推送到 GitHub Pages。
 
 功能：
-1. 拉取 4 个已收录分类的 QA 组需求 → 生成看板 HTML → 推送 GitHub
-2. 漏需求检测：扫描全项目其他分类，找出 QA 组负责但未收录的需求
+1. 用 developer 参数一次反查 QA 组 14 人的全部需求（快且准，不受分类分页限制）
+2. 按 category_id 分流：收录 4 分类 → 看板；排除 5 分类 → 忽略；其他 → 漏需求检测
+3. 生成看板 HTML（含「⚠ 分类外」卡片和漏需求区块）→ 推送 GitHub
 
 运行方式：
 - 本地：python3 refresh_qa_schedule.py（PAT 从 ~/AppData/Local/hermes/config.yaml 读取）
@@ -22,19 +23,19 @@ GH_PATH = "index.html"
 # 环境变量优先（云端），否则用内置/本地配置
 TAPD_TOKEN = os.environ.get("TAPD_TOKEN", "c7d76bfae20c89cd98246ea02886a46413f07f20")
 
-QA_TEAM = {
+QA_TEAM = [
     '吴淦淦', '李研锋', '张家像', '周旋之', '杨钦', '张海志', '吕昕远',
     '刘政豪', '张秋涵', '卢谦', '夏绍昌', '欧阳福辉', '刘鹏鸣', '李子涵'
-}
+]
+QA_TEAM_SET = set(QA_TEAM)
 
 # 已收录分类（看板展示）
-CATEGORY_IDS = [
-    ('1121711231001000206', '项目测试'),
-    ('1121711231001000434', '任务玩法'),
-    ('1121711231001000180', '数值系统'),
-    ('1121711231001000871', '小型团本07-幽姬'),
-]
-INCLUDED_CAT_IDS = {cid for cid, _ in CATEGORY_IDS}
+INCLUDED_CAT_IDS = {
+    '1121711231001000206': '项目测试',
+    '1121711231001000434': '任务玩法',
+    '1121711231001000180': '数值系统',
+    '1121711231001000871': '小型团本07-幽姬',
+}
 
 # 明确排除的分类（即使 QA 负责也不算漏网，用户确认）
 EXCLUDED_CAT_IDS = {
@@ -70,98 +71,67 @@ def get_pat():
     return match.group(1)
 
 
-def fetch_stories():
-    """拉取 4 个已收录分类的 QA 组需求"""
+def fetch_qa_stories():
+    """用 developer 参数一次反查 QA 组全部需求（含全部状态，后过滤）
+    比扫描分类更快更准：不受每分类 200 条分页限制。"""
     headers = get_headers()
     base_url = "https://api.tapd.cn"
+    dev_query = ';'.join(QA_TEAM)
+
     all_stories = []
+    page = 1
+    while True:
+        resp = requests.get(f"{base_url}/stories", headers=headers, params={
+            'workspace_id': TAPD_WS, 'developer': dev_query,
+            'limit': '200', 'page': str(page),
+            'fields': 'id,name,status,category_id,developer,owner,created'
+        }, timeout=60)
+        data = resp.json().get('data', [])
+        if not data:
+            break
+        all_stories.extend(item['Story'] for item in data)
+        if len(data) < 200:
+            break
+        page += 1
 
-    for cid, cname in CATEGORY_IDS:
-        page = 1
-        while True:
-            resp = requests.get(f"{base_url}/stories", headers=headers, params={
-                'workspace_id': TAPD_WS, 'category_id': cid,
-                'limit': '200', 'page': str(page),
-                'fields': 'id,name,status,developer,owner,created'
-            })
-            data = resp.json().get('data', [])
-            if not data:
-                break
-            for item in data:
-                s = item['Story']
-                if s.get('status') == 'resolved':
-                    continue
-                dev_raw = s.get('developer', '') or ''
-                devs = set(d.strip() for d in dev_raw.split(';') if d.strip())
-                if devs & QA_TEAM:
-                    main_dev = next((d for d in dev_raw.split(';') if d.strip() in QA_TEAM), '')
-                    st = STATUS_MAP.get(s['status'], s['status'])
-                    all_stories.append({
-                        'name': main_dev, 'title': s['name'], 'status': st,
-                        'status_raw': s['status'], 'owner': s.get('owner', ''),
-                        'created': s.get('created', '')[:10],
-                        'url': f"https://www.tapd.cn/{TAPD_WS}/prong/stories/view/{s['id']}"
-                    })
-            if len(data) < 200:
-                break
-            page += 1
-
-    print(f"Fetched {len(all_stories)} stories from {len(CATEGORY_IDS)} included categories")
+    print(f"Fetched {len(all_stories)} total QA stories (all statuses)")
     return all_stories
 
 
-def fetch_leaked_stories():
-    """漏需求检测：扫描已收录 + 已排除之外的其他分类，找出 QA 组负责的需求"""
-    headers = get_headers()
-    base_url = "https://api.tapd.cn"
-
-    # 1. 获取全部分类
-    resp = requests.get(f"{base_url}/story_categories", headers=headers,
-                        params={'workspace_id': TAPD_WS, 'limit': '200'})
-    categories = {}
-    for item in resp.json().get('data', []):
-        c = item['Category']
-        categories[str(c['id'])] = c['name']
-
-    # 2. 确定要扫描的分类 = 全部 - 已收录 - 已排除
-    scan_ids = [cid for cid in categories
-                if cid not in INCLUDED_CAT_IDS and cid not in EXCLUDED_CAT_IDS]
-
-    # 3. 逐个分类拉取，过滤 QA 组 + 非 resolved
-    leaked = []
-    for cid in scan_ids:
-        page = 1
-        while True:
-            resp = requests.get(f"{base_url}/stories", headers=headers, params={
-                'workspace_id': TAPD_WS, 'category_id': cid,
-                'limit': '200', 'page': str(page),
-                'fields': 'id,name,status,developer,owner,created'
+def classify_stories(raw_stories):
+    """按分类分流：收录 → 看板；排除 → 忽略；其他 → 漏网"""
+    included, leaked = [], []
+    for s in raw_stories:
+        if s.get('status') == 'resolved':
+            continue
+        dev_raw = s.get('developer', '') or ''
+        devs = set(d.strip() for d in dev_raw.split(';') if d.strip())
+        if not (devs & QA_TEAM_SET):
+            continue
+        cid = s.get('category_id', '-1')
+        if cid in INCLUDED_CAT_IDS:
+            main_dev = next((d for d in dev_raw.split(';') if d.strip() in QA_TEAM_SET), '')
+            st = STATUS_MAP.get(s['status'], s['status'])
+            included.append({
+                'name': main_dev, 'title': s['name'], 'status': st,
+                'status_raw': s['status'], 'owner': s.get('owner', ''),
+                'created': s.get('created', '')[:10],
+                'url': f"https://www.tapd.cn/{TAPD_WS}/prong/stories/view/{s['id']}"
             })
-            data = resp.json().get('data', [])
-            if not data:
-                break
-            for item in data:
-                s = item['Story']
-                if s.get('status') == 'resolved':
-                    continue
-                dev_raw = s.get('developer', '') or ''
-                devs = set(d.strip() for d in dev_raw.split(';') if d.strip())
-                if devs & QA_TEAM:
-                    main_dev = next((d for d in dev_raw.split(';') if d.strip() in QA_TEAM), '')
-                    st = STATUS_MAP.get(s['status'], s['status'])
-                    leaked.append({
-                        'name': main_dev, 'title': s['name'], 'status': st,
-                        'status_raw': s['status'], 'owner': s.get('owner', ''),
-                        'created': s.get('created', '')[:10],
-                        'category': categories.get(cid, cid),
-                        'url': f"https://www.tapd.cn/{TAPD_WS}/prong/stories/view/{s['id']}"
-                    })
-            if len(data) < 200:
-                break
-            page += 1
+        elif cid not in EXCLUDED_CAT_IDS:
+            # 漏网：QA 负责但不在收录也不在排除分类
+            main_dev = next((d for d in dev_raw.split(';') if d.strip() in QA_TEAM_SET), '')
+            st = STATUS_MAP.get(s['status'], s['status'])
+            leaked.append({
+                'name': main_dev, 'title': s['name'], 'status': st,
+                'status_raw': s['status'], 'owner': s.get('owner', ''),
+                'created': s.get('created', '')[:10],
+                'category': INCLUDED_CAT_IDS.get(cid, EXCLUDED_CAT_IDS.get(cid, f'分类{cid}')),
+                'url': f"https://www.tapd.cn/{TAPD_WS}/prong/stories/view/{s['id']}"
+            })
 
-    print(f"Leaked scan: {len(scan_ids)} categories scanned, {len(leaked)} leaked stories")
-    return leaked
+    print(f"Included: {len(included)} stories, Leaked: {len(leaked)} stories")
+    return included, leaked
 
 
 def build_data(all_stories):
@@ -189,10 +159,9 @@ def build_data(all_stories):
             'name': dev_name, 'total': len(items_sorted),
             'summary': ' '.join(f'{st}{stats.get(st,0)}' for st in STATUS_ORDER if stats.get(st,0)),
             'stats': {st: stats.get(st,0) for st in STATUS_ORDER},
-            'stories': [{'idx': i+1, 'name': s['title'], 'status': s['status_raw'],
-                         'status_cn': s['status'], 'owner': s['owner'],
-                         'created': s['created'], 'id': s['url'].split('/')[-1]}
-                        for i, s in enumerate(items_sorted)]
+            'items': [{'title': s['title'], 'status': s['status'], 'status_raw': s['status_raw'],
+                       'owner': s['owner'], 'created': s['created'], 'url': s['url']}
+                      for s in items_sorted]
         })
 
     for name in QA_TEAM:
@@ -374,6 +343,7 @@ const LEAKED = {LEAKED_STR};
 const STATUS_ORDER = ['新','设计取消','已提测','测试中','挂起'];
 const TAG_CLASS = {{'新':'tag-new','设计取消':'tag-cancelled','已提测':'tag-submitted','测试中':'tag-testing','挂起':'tag-suspended'}};
 const BADGE_CLASS = {{'新':'badge-new','设计取消':'badge-cancelled','已提测':'badge-submitted','测试中':'badge-testing','挂起':'badge-suspended'}};
+const TAPD_URL_STR = 'https://www.tapd.cn/{TAPD_WS}/prong/stories/view/';
 let activeFilter = 'all';
 function renderSummary() {{
   document.getElementById('summaryBody').innerHTML = DEVROWS.map(d => {{
@@ -405,7 +375,6 @@ function renderLeaked() {{
     return '<div class="leaked-cat"><div class="cat-title">'+cat.category+'（'+cat.total+'条） '+devs+'</div>'+rows+'</div>';
   }}).join('');
 }}
-const TAPD_URL_STR = 'https://www.tapd.cn/{TAPD_WS}/prong/stories/view/';
 function toggleAccordion(h) {{ h.parentElement.classList.toggle('open'); }}
 function toggleFilter(b,st) {{ document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); activeFilter=st; filterAll(); }}
 function filterAll() {{ renderAccordion(); }}
@@ -439,10 +408,9 @@ def main():
     pat = get_pat()
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
 
-    stories = fetch_stories()
-    data_json, dev_rows, summary, inactive = build_data(stories)
-
-    leaked = fetch_leaked_stories()
+    raw = fetch_qa_stories()
+    included, leaked = classify_stories(raw)
+    data_json, dev_rows, summary, inactive = build_data(included)
     leaked_cats, leaked_total = build_leaked_data(leaked)
 
     html = generate_html(data_json, dev_rows, summary, inactive, leaked_cats, leaked_total, now_str)
