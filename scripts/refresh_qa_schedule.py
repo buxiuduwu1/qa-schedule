@@ -313,6 +313,7 @@ tr:hover td {{ background:#283548; }}
 <div style="font-size:12px;color:#6b7280;margin-top:-12px;margin-bottom:8px;padding-left:4px;">无活跃需求：{inactive_text}</div>
 <div class="toolbar">
   <input type="text" id="search" placeholder="🔍 搜索需求标题..." oninput="filterAll()"/>
+  <button class="fbtn refresh-btn" onclick="triggerRefresh()" style="border-color:#8b5cf6;color:#8b5cf6;">🔄 手动刷新</button>
   <div class="filter-btns">
     <button class="fbtn active" onclick="toggleFilter(this,'all')">全部</button>
     <button class="fbtn" onclick="toggleFilter(this,'新')" style="border-color:#FF6770;color:#FF6770;">新</button>
@@ -323,6 +324,7 @@ tr:hover td {{ background:#283548; }}
   </div>
   <button class="toggle-all" onclick="toggleAll()">📂 展开全部</button>
 </div>
+<div id="refreshMsg" style="font-size:12px;color:#8b5cf6;margin-bottom:8px;display:none;"></div>
 <div class="accordion" id="accordion"></div>
 <div class="no-results hidden" id="noResults">😕 无匹配结果</div>
 <div class="leaked" id="leakedBox">
@@ -379,6 +381,21 @@ function toggleAccordion(h) {{ h.parentElement.classList.toggle('open'); }}
 function toggleFilter(b,st) {{ document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); activeFilter=st; filterAll(); }}
 function filterAll() {{ renderAccordion(); }}
 function toggleAll() {{ let gs=document.querySelectorAll('.acc-group'), ao=Array.from(gs).every(g=>g.classList.contains('open')); gs.forEach(g=>g.classList.toggle('open',!ao)); document.querySelector('.toggle-all').textContent=ao?'📂 展开全部':'📁 折叠全部'; }}
+function triggerRefresh() {{
+  let btn = document.querySelector('.refresh-btn'), msg = document.getElementById('refreshMsg');
+  btn.disabled = true; btn.textContent = '⏳ 刷新中...';
+  msg.style.display = 'block'; msg.textContent = '正在触发云端刷新，约 1-2 分钟完成...';
+  fetch('/api/refresh')
+    .then(r => r.json())
+    .then(d => {{
+      msg.textContent = d.ok ? '✅ ' + d.message + '，稍后刷新页面查看最新数据' : '❌ ' + d.message;
+      btn.disabled = false; btn.textContent = '🔄 手动刷新';
+    }})
+    .catch(e => {{
+      msg.textContent = '❌ 触发失败: ' + e.message;
+      btn.disabled = false; btn.textContent = '🔄 手动刷新';
+    }});
+}}
 renderSummary(); renderAccordion(); renderLeaked();
 </script>
 </body>
