@@ -44,8 +44,11 @@ async function readData(env) {
   const resp = await fetch(API_BASE, { headers: makeHeaders(env) });
   if (!resp.ok) throw new Error('GitHub 读取失败: ' + resp.status);
   const meta = await resp.json();
-  const content = atob(meta.content.replace(/\n/g, ''));
-  const data = JSON.parse(content);
+  // 正确解码 UTF-8：atob 得到 Latin-1 字符串，需转 Uint8Array 再用 TextDecoder
+  const binary = atob(meta.content.replace(/\n/g, ''));
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  const text = new TextDecoder('utf-8').decode(bytes);
+  const data = JSON.parse(text);
   data._sha = meta.sha;
   return data;
 }
