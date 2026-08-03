@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>值班排班板 · 诛仙世界 QA</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0f1117; color:#e1e4e8; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; line-height:1.5; min-height:100vh; }
+a { color:#58a6ff; text-decoration:none; } a:hover { text-decoration:underline; }
+
+/* 侧边栏布局 */
+.layout { display:flex; min-height:100vh; }
+.sidebar { width:200px; background:#161b22; border-right:1px solid #30363d; padding:16px 0; flex-shrink:0; }
+.sidebar .logo { padding:0 16px 16px; font-size:16px; font-weight:700; color:#f0f6fc; border-bottom:1px solid #21262d; margin-bottom:12px; }
+.sidebar .logo small { display:block; font-size:11px; color:#8b949e; font-weight:400; margin-top:2px; }
+.sidebar a.nav { display:block; padding:10px 16px; color:#8b949e; font-size:13px; border-left:3px solid transparent; }
+.sidebar a.nav:hover { background:#1c2128; color:#f0f6fc; }
+.sidebar a.nav.active { color:#f0f6fc; background:#1c2128; border-left-color:#58a6ff; font-weight:600; }
+.main { flex:1; padding:20px 24px; max-width:1000px; }
+.main h1 { font-size:20px; color:#f0f6fc; margin-bottom:4px; }
+.main .sub { font-size:12px; color:#8b949e; margin-bottom:20px; }
+
+/* 本周值班卡片 */
+.this-week { background:#1f2937; border:1px solid #374151; border-left:4px solid #8b5cf6; border-radius:10px; padding:20px 24px; margin-bottom:24px; }
+.this-week .label { font-size:12px; color:#8b949e; margin-bottom:8px; }
+.this-week .who { font-size:28px; font-weight:700; color:#f0f6fc; }
+.this-week .who .week-range { font-size:14px; color:#8b949e; font-weight:400; margin-left:12px; }
+
+/* 工具栏 */
+.toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; align-items:center; }
+.btn { padding:6px 14px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#c9d1d9; font-size:12px; cursor:pointer; transition:all .2s; }
+.btn:hover { background:#1c2128; border-color:#58a6ff; }
+.btn.primary { background:#8b5cf6; border-color:#8b5cf6; color:#fff; }
+.btn.primary:hover { background:#7c3aed; }
+.btn.danger { color:#f85149; border-color:#f8514944; }
+.btn.danger:hover { background:#f8514911; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+
+/* 排班表格 */
+table { width:100%; border-collapse:collapse; background:#161b22; border:1px solid #30363d; border-radius:8px; overflow:hidden; font-size:13px; }
+th { background:#1a1d27; color:#8b949e; font-weight:500; padding:10px 14px; text-align:left; white-space:nowrap; }
+td { padding:10px 14px; border-bottom:1px solid #21262d; }
+tr:last-child td { border-bottom:none; }
+tr.current td { background:#8b5cf61a; }
+tr.current td:first-child { border-left:3px solid #8b5cf6; }
+.badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; }
+.badge.current { background:#8b5cf6; color:#fff; }
+.badge.future { background:#21262d; color:#8b949e; }
+.actions { display:flex; gap:6px; }
+.actions button { padding:3px 10px; font-size:11px; }
+
+/* 人员管理 */
+.people-section { margin-top:24px; }
+.people-section h2 { font-size:15px; color:#f0f6fc; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #21262d; }
+.people-list { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.person-chip { display:flex; align-items:center; gap:6px; background:#1f2937; border:1px solid #374151; border-radius:20px; padding:4px 6px 4px 14px; font-size:13px; }
+.person-chip button { background:none; border:none; color:#f85149; cursor:pointer; font-size:14px; line-height:1; padding:2px 6px; border-radius:50%; }
+.person-chip button:hover { background:#f8514911; }
+.add-person { display:flex; gap:6px; margin-top:8px; }
+.add-person input { padding:6px 12px; background:#161b22; border:1px solid #30363d; border-radius:8px; color:#e1e4e8; font-size:13px; outline:none; }
+.add-person input:focus { border-color:#8b5cf6; }
+.add-person button { padding:6px 14px; }
+
+/* 提示 */
+.msg { padding:10px 14px; border-radius:8px; font-size:12px; margin-bottom:12px; display:none; }
+.msg.show { display:block; }
+.msg.ok { background:#23863622; color:#3fb950; border:1px solid #23863644; }
+.msg.err { background:#f8514922; color:#f85149; border:1px solid #f8514944; }
+
+.footer { text-align:center; padding:20px 0; color:#484f58; font-size:12px; }
+@media (max-width:768px) { .sidebar { width:56px; } .sidebar .logo { padding:0 8px 12px; font-size:0; } .sidebar .logo small { display:none; } .sidebar a.nav { padding:10px 8px; font-size:0; } .sidebar a.nav::first-letter { font-size:16px; } .main { padding:14px; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar">
+    <div class="logo">🔧 QA 工作台<small>诛仙世界</small></div>
+    <a class="nav" href="/">📋 排期看板</a>
+    <a class="nav active" href="/duty/">👥 值班排班</a>
+  </div>
+  <div class="main">
+    <h1>👥 值班排班板</h1>
+    <div class="sub">每周一自动轮换 · 点击操作可手动换班 / 增删人员</div>
+
+    <div id="msg" class="msg"></div>
+
+    <div class="this-week">
+      <div class="label">📅 本周值班</div>
+      <div class="who"><span id="thisWeekWho">—</span><span class="week-range" id="thisWeekRange"></span></div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn primary" onclick="loadSchedule()">🔄 刷新</button>
+      <button class="btn" onclick="openSwap()">🔁 换班</button>
+      <button class="btn" onclick="togglePeople()" id="peopleToggle">👥 人员管理</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th style="width:80px">周次</th><th>日期范围</th><th style="width:120px">值班人</th><th style="width:80px">状态</th><th style="width:110px">操作</th></tr>
+      </thead>
+      <tbody id="scheduleBody"></tbody>
+    </table>
+
+    <div class="people-section" id="peopleSection" style="display:none;">
+      <h2>👥 排班人员管理</h2>
+      <div class="people-list" id="peopleList"></div>
+      <div class="add-person">
+        <input type="text" id="newPersonName" placeholder="输入姓名添加值班人员" />
+        <button class="btn primary" onclick="addPerson()">添加</button>
+      </div>
+    </div>
+
+    <div class="footer">数据存储：Cloudflare KV · 每周一 00:00 自动轮换</div>
+  </div>
+</div>
+
+<script>
+let scheduleData = null; // { people: [], start_date: "YYYY-MM-DD" }
+
+function showMsg(text, isErr) {
+  const msg = document.getElementById('msg');
+  msg.textContent = text;
+  msg.className = 'msg show ' + (isErr ? 'err' : 'ok');
+  setTimeout(() => msg.classList.remove('show'), 4000);
+}
+
+function getMondayOfWeek(d) {
+  const date = new Date(d);
+  const day = date.getDay() || 7;
+  date.setDate(date.getDate() - day + 1);
+  date.setHours(0,0,0,0);
+  return date;
+}
+
+function getWeekNumber(startDate, currentDate) {
+  const start = getMondayOfWeek(new Date(startDate));
+  const cur = getMondayOfWeek(currentDate);
+  return Math.round((cur - start) / (7 * 24 * 3600 * 1000));
+}
+
+function formatDate(d) {
+  const date = new Date(d);
+  return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+}
+
+function addDays(d, n) {
+  const date = new Date(d);
+  date.setDate(date.getDate() + n);
+  return date;
+}
+
+function getDutyForWeek(people, startDate, weekNum) {
+  if (!people || people.length === 0) return '—';
+  return people[((weekNum % people.length) + people.length) % people.length];
+}
+
+async function loadSchedule() {
+  try {
+    const resp = await fetch('/api/duty');
+    if (!resp.ok) throw new Error('加载失败: ' + resp.status);
+    const data = await resp.json();
+    scheduleData = data;
+    renderSchedule();
+  } catch (e) {
+    showMsg('加载失败: ' + e.message, true);
+  }
+}
+
+function renderSchedule() {
+  if (!scheduleData) return;
+  const { people, start_date } = scheduleData;
+  const startMonday = getMondayOfWeek(new Date(start_date));
+  const thisWeek = getWeekNumber(start_date, new Date());
+
+  // 本周值班
+  const currentWho = getDutyForWeek(people, start_date, thisWeek);
+  const weekStart = addDays(startMonday, thisWeek * 7);
+  const weekEnd = addDays(weekStart, 6);
+  document.getElementById('thisWeekWho').textContent = currentWho;
+  document.getElementById('thisWeekRange').textContent = formatDate(weekStart) + ' ~ ' + formatDate(weekEnd);
+
+  // 排班表：前后各显示几周
+  const tbody = document.getElementById('scheduleBody');
+  let html = '';
+  const startShow = thisWeek - 2;
+  const endShow = thisWeek + 8;
+  for (let w = startShow; w <= endShow; w++) {
+    const who = getDutyForWeek(people, start_date, w);
+    const ws = addDays(startMonday, w * 7);
+    const we = addDays(ws, 6);
+    const isCurrent = w === thisWeek;
+    const rel = w < thisWeek ? '上周' : (w === thisWeek ? '本周' : '第' + (w - thisWeek + 1) + '周');
+    html += `<tr class="${isCurrent ? 'current' : ''}">
+      <td>${rel}</td>
+      <td>${formatDate(ws)} ~ ${formatDate(we)}</td>
+      <td><strong>${who}</strong></td>
+      <td>${isCurrent ? '<span class="badge current">值班中</span>' : '<span class="badge future">待值</span>'}</td>
+      <td class="actions"><button class="btn" onclick="openSwapFor(${w})">换班</button></td>
+    </tr>`;
+  }
+  tbody.innerHTML = html;
+
+  // 人员列表
+  renderPeople();
+}
+
+function renderPeople() {
+  if (!scheduleData) return;
+  const list = document.getElementById('peopleList');
+  list.innerHTML = scheduleData.people.map((p, i) =>
+    `<span class="person-chip">${p} <button onclick="removePerson(${i})" title="移除">×</button></span>`
+  ).join('');
+}
+
+function togglePeople() {
+  const section = document.getElementById('peopleSection');
+  const isHidden = section.style.display === 'none';
+  section.style.display = isHidden ? 'block' : 'none';
+  document.getElementById('peopleToggle').textContent = isHidden ? '收起人员管理' : '👥 人员管理';
+}
+
+async function apiCall(method, body) {
+  const resp = await fetch('/api/duty', {
+    method: method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await resp.json();
+  if (!resp.ok || !data.ok) throw new Error(data.message || ('请求失败 ' + resp.status));
+  return data;
+}
+
+// 换班
+function openSwap() {
+  const name = prompt('输入要换班的两人姓名，用逗号分隔（例如：张三,李四）');
+  if (!name) return;
+  const parts = name.split(/[,，]/).map(s => s.trim());
+  if (parts.length !== 2 || !parts[0] || !parts[1]) { showMsg('格式错误，请用逗号分隔两个姓名', true); return; }
+  swapPeople(parts[0], parts[1]);
+}
+
+function openSwapFor(weekNum) {
+  if (!scheduleData) return;
+  const who = getDutyForWeek(scheduleData.people, scheduleData.start_date, weekNum);
+  const target = prompt(`第${weekNum}周值班的是 ${who}，想换成谁？`);
+  if (!target) return;
+  const t = target.trim();
+  if (!t || t === who) return;
+  // 找到目标在人员中的位置，交换
+  const idx1 = scheduleData.people.indexOf(who);
+  const idx2 = scheduleData.people.indexOf(t);
+  if (idx2 === -1) {
+    showMsg(`人员列表中没有 ${t}，请先添加`, true);
+    return;
+  }
+  swapIndexes(idx1, idx2);
+}
+
+async function swapPeople(a, b) {
+  if (!scheduleData) return;
+  const idx1 = scheduleData.people.indexOf(a);
+  const idx2 = scheduleData.people.indexOf(b);
+  if (idx1 === -1) { showMsg(`人员列表中没有 ${a}`, true); return; }
+  if (idx2 === -1) { showMsg(`人员列表中没有 ${b}`, true); return; }
+  if (idx1 === idx2) { showMsg('两人相同，无需交换', true); return; }
+  await swapIndexes(idx1, idx2);
+}
+
+async function swapIndexes(i, j) {
+  try {
+    await apiCall('POST', { action: 'swap', i: i, j: j });
+    showMsg('换班成功！');
+    await loadSchedule();
+  } catch (e) {
+    showMsg(e.message, true);
+  }
+}
+
+async function addPerson() {
+  const input = document.getElementById('newPersonName');
+  const name = input.value.trim();
+  if (!name) return;
+  try {
+    await apiCall('POST', { action: 'add', name: name });
+    showMsg(`已添加 ${name}`);
+    input.value = '';
+    await loadSchedule();
+  } catch (e) {
+    showMsg(e.message, true);
+  }
+}
+
+async function removePerson(i) {
+  if (!scheduleData) return;
+  const name = scheduleData.people[i];
+  if (!confirm(`确定从排班中移除 ${name} 吗？`)) return;
+  try {
+    await apiCall('POST', { action: 'remove', index: i });
+    showMsg(`已移除 ${name}`);
+    await loadSchedule();
+  } catch (e) {
+    showMsg(e.message, true);
+  }
+}
+
+// 初始化
+loadSchedule();
+</script>
+</body>
+</html>
