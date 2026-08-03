@@ -444,11 +444,18 @@ def main():
 
     html = generate_html(data_json, dev_rows, summary, inactive, leaked_cats, leaked_total, now_str)
     commit_sha = push_to_github(html, pat)
+
+    # 写入 cwd/index.html（GitHub Actions 里 cwd=仓库根目录，供 pages deploy . 使用）
+    local_html = os.path.join(os.getcwd(), "index.html")
+    with open(local_html, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"cwd index.html 已更新 ({len(html)} bytes)")
+
     purge_jsdelivr()
 
     print(f"✅ 看板已刷新 · 收录{summary['total']}条 · 分类外{leaked_total}条 · commit {commit_sha[:7]}")
+    print(f"   Cloudflare Pages: https://{GH_OWNER}.pages.dev/")
     print(f"   GitHub Pages: https://{GH_OWNER}.github.io/{GH_REPO}/")
-    print(f"   国内镜像: https://cdn.jsdelivr.net/gh/{GH_OWNER}/{GH_REPO}@main/{GH_PATH}")
 
 
 if __name__ == '__main__':
