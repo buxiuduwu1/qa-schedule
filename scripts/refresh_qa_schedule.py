@@ -211,6 +211,14 @@ def generate_html(data_json, dev_rows, summary, inactive, leaked_cats, leaked_to
 <style>
 * {{ margin:0; padding:0; box-sizing:border-box; }}
 body {{ background:#111827; color:#e5e7eb; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; padding:20px; max-width:1200px; margin:0 auto; }}
+.layout {{ display:flex; gap:16px; }}
+.sidebar {{ width:180px; flex-shrink:0; background:#1f2937; border-radius:10px; padding:12px 0; height:fit-content; position:sticky; top:20px; }}
+.sidebar .logo {{ padding:8px 16px 12px; font-size:15px; font-weight:700; color:#f9fafb; border-bottom:1px solid #374151; margin-bottom:8px; }}
+.sidebar .logo small {{ display:block; font-size:11px; color:#9ca3af; font-weight:400; }}
+.sidebar a.nav {{ display:block; padding:10px 16px; color:#9ca3af; font-size:13px; border-left:3px solid transparent; text-decoration:none; }}
+.sidebar a.nav:hover {{ background:#283548; color:#f3f4f6; }}
+.sidebar a.nav.active {{ color:#fff; background:#283548; border-left-color:#8b5cf6; font-weight:600; }}
+.content {{ flex:1; min-width:0; }}
 .header {{ text-align:center; padding:20px 0 10px; }}
 .header h1 {{ font-size:24px; color:#f9fafb; }}
 .header .sub {{ font-size:13px; color:#9ca3af; margin-top:4px; }}
@@ -288,6 +296,13 @@ tr:hover td {{ background:#283548; }}
 </style>
 </head>
 <body>
+<div class="layout">
+<div class="sidebar">
+  <div class="logo">🔧 QA 工作台<small>诛仙世界</small></div>
+  <a class="nav active" href="/">📋 排期看板</a>
+  <a class="nav" href="/duty/">👥 值班排班</a>
+</div>
+<div class="content">
 <div class="header">
   <h1>🔧 QA 测试需求排期看板</h1>
   <div class="sub">诛仙世界 · 项目测试 / 任务玩法 / 数值系统 / 小型团本07-幽姬</div>
@@ -336,6 +351,8 @@ tr:hover td {{ background:#283548; }}
   <div class="leaked-body" id="leakedBody"></div>
 </div>
 <div class="footer">数据来源：TAPD API · 诛仙世界 workspace 21711231 · 每周一 12:00 自动刷新 · GitHub Actions 云端执行</div>
+</div>
+</div>
 <script>
 const DATA = {DATA_STR};
 const SUMMARY = {SUMMARY_STR};
