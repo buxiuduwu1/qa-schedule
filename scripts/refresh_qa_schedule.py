@@ -99,36 +99,36 @@ def fetch_qa_stories():
 
 
 def classify_stories(raw_stories):
-    """按分类分流：收录 → 看板；排除 → 忽略；其他 → 漏网"""
+    """按分类分流：收录 → 看板；排除 → 忽略；其他 → 漏网
+
+    多人协作需求（developer 字段含多个 QA 成员）：每个参与的 QA 名下都显示该条
+    （2026-08-13 用户确认：所有参与的 QA 都显示在各自名下，合计会变大）。
+    """
     included, leaked = [], []
     for s in raw_stories:
         if s.get('status') == 'resolved':
             continue
         dev_raw = s.get('developer', '') or ''
-        devs = set(d.strip() for d in dev_raw.split(';') if d.strip())
-        if not (devs & QA_TEAM_SET):
+        devs = [d.strip() for d in dev_raw.split(';') if d.strip()]
+        qa_devs = [d for d in devs if d in QA_TEAM_SET]
+        if not qa_devs:
             continue
         cid = s.get('category_id', '-1')
+        st = STATUS_MAP.get(s['status'], s['status'])
+        base = {
+            'title': s['name'], 'status': st,
+            'status_raw': s['status'], 'owner': s.get('owner', ''),
+            'created': s.get('created', '')[:10],
+            'url': f"https://www.tapd.cn/{TAPD_WS}/prong/stories/view/{s['id']}"
+        }
         if cid in INCLUDED_CAT_IDS:
-            main_dev = next((d for d in dev_raw.split(';') if d.strip() in QA_TEAM_SET), '')
-            st = STATUS_MAP.get(s['status'], s['status'])
-            included.append({
-                'name': main_dev, 'title': s['name'], 'status': st,
-                'status_raw': s['status'], 'owner': s.get('owner', ''),
-                'created': s.get('created', '')[:10],
-                'url': f"https://www.tapd.cn/{TAPD_WS}/prong/stories/view/{s['id']}"
-            })
+            for qa in qa_devs:
+                included.append({**base, 'name': qa})
         elif cid not in EXCLUDED_CAT_IDS:
             # 漏网：QA 负责但不在收录也不在排除分类
-            main_dev = next((d for d in dev_raw.split(';') if d.strip() in QA_TEAM_SET), '')
-            st = STATUS_MAP.get(s['status'], s['status'])
-            leaked.append({
-                'name': main_dev, 'title': s['name'], 'status': st,
-                'status_raw': s['status'], 'owner': s.get('owner', ''),
-                'created': s.get('created', '')[:10],
-                'category': INCLUDED_CAT_IDS.get(cid, EXCLUDED_CAT_IDS.get(cid, f'分类{cid}')),
-                'url': f"https://www.tapd.cn/{TAPD_WS}/prong/stories/view/{s['id']}"
-            })
+            for qa in qa_devs:
+                leaked.append({**base, 'name': qa,
+                    'category': INCLUDED_CAT_IDS.get(cid, EXCLUDED_CAT_IDS.get(cid, f'分类{cid}'))})
 
     print(f"Included: {len(included)} stories, Leaked: {len(leaked)} stories")
     return included, leaked
